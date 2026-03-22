@@ -787,8 +787,10 @@ body {
 }
 .kakao-marker.s { background:#5b6ef5; color:#fff; }
 .kakao-marker.s::after { border-top:7px solid #5b6ef5; }
-.kakao-marker.g { background:#6d4fc2; color:#fff; }
-.kakao-marker.g::after { border-top:7px solid #6d4fc2; }
+.kakao-marker.c { background:#6d4fc2; color:#fff; }
+.kakao-marker.c::after { border-top:7px solid #6d4fc2; }
+.kakao-marker.g { background:#9b59b6; color:#fff; }
+.kakao-marker.g::after { border-top:7px solid #9b59b6; }
 .kakao-marker.sel { background:#be185d; border-color:#fff; }
 .kakao-marker.sel::after { border-top-color:#be185d; }
 ::-webkit-scrollbar { width:3px; }
@@ -1466,12 +1468,13 @@ function initMap(centerLat, centerLng) {
     const filtered = curFilter==='all' ? exs : exs.filter(e=>e.type===curFilter);
     filtered.forEach(ex => {
       const lbl = ex.title.length>10 ? ex.title.slice(0,10)+'…' : ex.title;
-      const isS = ex.type==='student';
-      const content = `<div class="kakao-marker ${isS?'s':'g'}" id="ml-${ex.id}" onclick="selMark(${ex.id})">${lbl}</div>`;
+      const cls = ex.type==='graduation' ? 'g' : ex.type==='club' ? 'c' : 's';
+      const content = `<div class="kakao-marker ${cls}" id="ml-${ex.id}" onclick="selMark(${ex.id})" style="cursor:pointer;pointer-events:auto">${lbl}</div>`;
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(ex.lat, ex.lng),
         content: content,
-        yAnchor: 1.3
+        yAnchor: 1.3,
+        zIndex: 3
       });
       overlay.setMap(map);
       overlay._exId = ex.id;
@@ -1519,8 +1522,8 @@ function goToMyLoc() {
   }, ()=>alert('위치 권한을 허용해주세요.'));
 }
 
-// ④ Selected marker — LARGE hero card
-function selMark(id) {
+// ④ Selected marker — LARGE hero card (전역 등록 필수: CustomOverlay innerHTML onclick에서 호출)
+window.selMark = function selMark(id) {
   selMarkId = id;
   // reset all markers
   markers.forEach(m => {
@@ -1620,8 +1623,7 @@ function showDetail(id) {
   scrapBtn.style.background = isScrapped ? 'rgba(190,24,93,.1)' : 'rgba(255,255,255,.9)';
   scrapBtn.onclick = () => toggleScrap(id);
 }
-// ── SCRAP ──
-function openInsta() {
+window.openInsta = function openInsta() {
   const btn = document.getElementById('detInstaBtn');
   const ig = btn && btn.dataset.ig;
   if(!ig) return;
