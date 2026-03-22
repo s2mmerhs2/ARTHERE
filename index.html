@@ -399,10 +399,12 @@ body {
 .cal-exc-bd { flex:1; min-width:0; }
 .cal-exc-title { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cal-exc-meta { font-size:11px; color:var(--muted); margin-bottom:5px; }
-.cal-exc-rat { display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700; }
-.cal-exc-rat .si { color:#f59e0b; }
-.cal-exc-rat .rv { color:var(--ink); }
-.cal-exc-rat .rl { color:var(--muted); font-size:10px; font-weight:400; }
+.cal-exc-rat { display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#be185d; }
+
+/* Review item */
+.rev-who-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+.rev-who { font-size:11px; font-weight:700; color:var(--muted); }
+.rev-hearts { font-size:12px; color:#be185d; font-weight:700; }
 
 /* ═══════════════════════════════
    DISCOVER PAGE
@@ -491,33 +493,86 @@ body {
 /* ═══════════════════════════════
    MY PAGE
 ═══════════════════════════════ */
-#pgMy .scr { padding:20px 16px 24px; }
-.prof-card {
-  border-radius:20px; padding:22px; margin-bottom:20px;
-  background:var(--aurora-dark); position:relative; overflow:hidden;
+#pgMy .scr { padding:0 0 40px; }
+
+/* 프로필 상단 */
+.my-prof-wrap {
+  display:flex; flex-direction:column; align-items:center;
+  padding:32px 20px 24px;
+  background:linear-gradient(160deg, #e8e4f5 0%, #f5f0fb 100%);
+  margin-bottom:16px;
 }
-.prof-card::before {
-  content:''; position:absolute; inset:0;
-  background:
-    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(167,139,250,.4) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 20% 70%, rgba(192,132,252,.3) 0%, transparent 65%);
-  pointer-events:none;
-}
-.prof-inner { position:relative; z-index:1; display:flex; align-items:center; gap:14px; }
-.prof-av {
-  width:52px; height:52px; border-radius:50%;
-  background:rgba(255,255,255,.2); backdrop-filter:blur(8px);
-  border:2px solid rgba(255,255,255,.3);
+.my-av-wrap { position:relative; margin-bottom:14px; }
+.my-av {
+  width:80px; height:80px; border-radius:50%;
+  background:var(--accent); color:#fff;
   display:flex; align-items:center; justify-content:center;
-  font-size:22px; color:#fff; font-weight:700; font-family:'Playfair Display',serif; flex-shrink:0;
+  font-size:32px; font-weight:700; font-family:'Playfair Display',serif;
+  border:3px solid #fff; box-shadow:0 4px 16px rgba(88,53,94,.2);
 }
-.prof-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:3px; }
-.prof-school { font-size:12px; color:rgba(255,255,255,.55); }
-.sec-hdr2 { font-size:11px; font-weight:700; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+.my-name { font-size:20px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+.my-email { font-size:12px; color:var(--muted); margin-bottom:16px; }
+.my-edit-btn {
+  padding:10px 28px; border-radius:20px;
+  background:#fff; color:var(--ink2); border:1.5px solid var(--border);
+  font-size:13px; font-weight:600; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+.my-edit-btn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+/* 메뉴 카드 */
+.my-menu-card {
+  margin:0 16px 10px;
+  background:var(--white); border:1px solid var(--border); border-radius:16px;
+  padding:16px; display:flex; align-items:center; gap:14px;
+  cursor:pointer; transition:all .2s; box-shadow:var(--sh1);
+}
+.my-menu-card:hover { box-shadow:var(--sh2); transform:translateY(-1px); }
+.my-menu-icon {
+  width:42px; height:42px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+}
+.my-menu-body { flex:1; }
+.my-menu-title { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:2px; }
+.my-menu-sub { font-size:11px; color:var(--muted); }
+.my-menu-num { font-size:22px; font-weight:900; color:var(--accent); font-family:'Playfair Display',serif; }
+.my-menu-arrow { font-size:20px; color:var(--muted); }
+
+/* 배너 */
+.my-banner {
+  margin:4px 16px 20px;
+  background:var(--accent); border-radius:18px; padding:20px;
+  cursor:pointer; transition:all .2s;
+  position:relative; overflow:hidden;
+}
+.my-banner::before {
+  content:''; position:absolute; right:-20px; top:-20px;
+  width:100px; height:100px; border-radius:50%;
+  background:rgba(255,255,255,.08);
+}
+.my-banner:hover { background:var(--accent-dark); }
+.my-banner-text { margin-bottom:14px; }
+.my-banner-title { font-size:16px; font-weight:700; color:#fff; line-height:1.3; margin-bottom:6px; }
+.my-banner-sub { font-size:12px; color:rgba(255,255,255,.7); line-height:1.5; }
+.my-banner-btn {
+  background:rgba(255,255,255,.2); color:#fff;
+  border:1.5px solid rgba(255,255,255,.4); border-radius:20px;
+  padding:9px 18px; font-size:12px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+  transition:all .2s;
+}
+.my-banner-btn:hover { background:rgba(255,255,255,.3); }
+
+/* 후기 섹션 */
+.my-sec-hdr { display:flex; align-items:center; justify-content:space-between; padding:0 16px; margin-bottom:12px; }
+.my-sec-title { font-size:16px; font-weight:700; color:var(--ink); }
+#myList { padding:0 16px; }
+
 .ci { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
-.ci-h { font-size:13px; color:#be185d; margin-bottom:3px; }
+.ci-h { font-size:11px; color:#be185d; margin-bottom:3px; }
 .ci-t { font-size:12px; color:#555; line-height:1.5; }
-.btn-lo { width:100%; padding:13px; border:1.5px solid var(--border); background:var(--white); color:var(--ink); border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; margin-top:10px; }
+.btn-lo { margin:8px 16px 0; width:calc(100% - 32px); padding:13px; border:1.5px solid var(--border); background:var(--white); color:var(--ink); border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; }
 .btn-lo:hover { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
 
 /* ═══════════════════════════════
@@ -594,7 +649,9 @@ body {
   font-family:'Noto Sans KR',sans-serif;
 }
 .rev-item { background:var(--surface); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
-.rev-who { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:.5px; margin-bottom:5px; }
+.rev-who-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+.rev-who { font-size:11px; font-weight:700; color:var(--muted); }
+.rev-hearts { font-size:11px; color:#be185d; font-weight:600; }
 .rev-t { font-size:13px; color:var(--ink); line-height:1.6; }
 
 /* ── ADD MODAL ── */
@@ -735,18 +792,54 @@ body {
 
     <!-- ⑤ MY -->
     <div class="pg" id="pgMy">
-      <div class="scr">
-        <div class="prof-card">
-          <div class="prof-inner">
-            <div class="prof-av" id="profAv">A</div>
-            <div>
-              <div class="prof-name" id="profName">사용자</div>
-              <div class="prof-school" id="profSchool">학교 · 학과</div>
-            </div>
+      <div class="scr" id="myScr">
+
+        <!-- 프로필 카드 -->
+        <div class="my-prof-wrap">
+          <div class="my-av-wrap">
+            <div class="my-av" id="profAv">A</div>
           </div>
+          <div class="my-name" id="profName">사용자</div>
+          <div class="my-email" id="profSchool">학교 · 학과</div>
+          <button class="my-edit-btn" id="myEditBtn">Edit Profile</button>
         </div>
-        <div class="sec-hdr2">내가 남긴 평가</div>
-        <div id="myList"></div>
+
+        <!-- 메뉴 카드들 -->
+        <div class="my-menu-card" id="myReviewMenu" onclick="document.getElementById('myReviewSec').scrollIntoView({behavior:'smooth'})">
+          <div class="my-menu-icon" style="background:#ede9fe">✍️</div>
+          <div class="my-menu-body">
+            <div class="my-menu-title">내가 남긴 후기</div>
+            <div class="my-menu-sub" id="myReviewCount">0개의 소중한 기록</div>
+          </div>
+          <div class="my-menu-num" id="myReviewNum">0</div>
+        </div>
+
+        <div class="my-menu-card" onclick="openAuth('login')" id="mySettingMenu">
+          <div class="my-menu-icon" style="background:#f0f9ff">⚙️</div>
+          <div class="my-menu-body">
+            <div class="my-menu-title">내 정보 설정</div>
+            <div class="my-menu-sub">계정 및 보안 설정</div>
+          </div>
+          <div class="my-menu-arrow">›</div>
+        </div>
+
+        <!-- 전시 등록 배너 -->
+        <div class="my-banner" onclick="document.getElementById('addModal').classList.add('on')">
+          <div class="my-banner-text">
+            <div class="my-banner-title">새로운 전시를 발견하셨나요?</div>
+            <div class="my-banner-sub">함께 나누고 싶은 전시 정보를 직접 등록해보세요.</div>
+          </div>
+          <button class="my-banner-btn">정보 등록하기 +</button>
+        </div>
+
+        <!-- 내가 남긴 후기 -->
+        <div id="myReviewSec">
+          <div class="my-sec-hdr">
+            <div class="my-sec-title">내가 남긴 후기</div>
+          </div>
+          <div id="myList"></div>
+        </div>
+
         <button class="btn-lo" id="logoutBtn">로그아웃</button>
       </div>
     </div>
@@ -877,6 +970,30 @@ let cu = JSON.parse(localStorage.getItem('cu'));
 let exs = JSON.parse(localStorage.getItem('exs')) || [];
 let rats = JSON.parse(localStorage.getItem('rats')) || [];
 let users = JSON.parse(localStorage.getItem('users')) || [];
+
+// 더미 유저 (리뷰에 학교/학과 표시용)
+const dummyUsers = [
+  {id:901,username:'이지연',school:'홍익대학교',major:'회화과'},{id:902,username:'박민준',school:'연세대학교',major:'철학과'},
+  {id:903,username:'김서아',school:'이화여자대학교',major:'시각디자인학과'},{id:904,username:'최준혁',school:'서울대학교',major:'미학과'},
+  {id:905,username:'정유진',school:'국민대학교',major:'공업디자인학과'},{id:906,username:'한소희',school:'성균관대학교',major:'미술학과'},
+  {id:907,username:'오태양',school:'중앙대학교',major:'사진학과'},{id:908,username:'신예은',school:'숙명여자대학교',major:'회화과'},
+  {id:909,username:'임지훈',school:'건국대학교',major:'의상디자인학과'},{id:910,username:'강나영',school:'동국대학교',major:'연극학과'},
+  {id:801,username:'류민서',school:'카이스트',major:'산업디자인학과'},{id:802,username:'윤서준',school:'포스텍',major:'인문사회학부'},
+  {id:803,username:'배지은',school:'한양대학교',major:'실내건축디자인학과'},{id:804,username:'고은지',school:'경희대학교',major:'아트퓨전디자인학과'},
+  {id:805,username:'문현우',school:'서강대학교',major:'아트&테크놀로지학과'},
+  {id:701,username:'안채원',school:'이화여자대학교',major:'조소과'},{id:702,username:'장도현',school:'홍익대학교',major:'금속조형디자인과'},
+  {id:703,username:'황수빈',school:'서울여자대학교',major:'서양화과'},{id:601,username:'노지민',school:'중앙대학교',major:'조소학과'},
+  {id:602,username:'석예진',school:'국민대학교',major:'회화과'},{id:501,username:'변우석',school:'경기대학교',major:'서양화학과'},
+  {id:502,username:'홍아름',school:'동덕여자대학교',major:'큐레이터학과'},{id:311,username:'김태리',school:'숙명여자대학교',major:'패션디자인학과'},
+  {id:312,username:'이도현',school:'건국대학교',major:'의상디자인학과'},{id:51,username:'박나래',school:'카이스트',major:'문화기술대학원'},
+  {id:52,username:'정우성',school:'포스텍',major:'창의IT융합공학과'},
+];
+// 로컬스토리지 유저에 없으면 더미 유저 병합
+if(!localStorage.getItem('dummyUsersAdded')) {
+  dummyUsers.forEach(du => { if(!users.find(u=>u.id===du.id)) users.push(du); });
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('dummyUsersAdded','1');
+}
 let map, curExId, markers=[], selMarkId=null, myLocM=null, detMM=null;
 let calM=new Date().getMonth(), calY=new Date().getFullYear();
 let curFilter='all', prevPg='pgMap', selCal=null;
@@ -1223,14 +1340,23 @@ function subRat() {
   loadRevs(curExId);
 }
 function loadRevs(id) {
-  const r=rats.filter(x=>x.exhibitionId===id);
-  document.getElementById('revCnt').textContent=r.length;
-  const list=document.getElementById('revList'); list.innerHTML='';
-  if(!r.length){list.innerHTML='<div class="empty"><div class="empty-ico">✍️</div>첫 번째로 마음을 남겨보세요!</div>';return;}
-  r.forEach((x,i)=>{
-    const el=document.createElement('div'); el.className='rev-item';
-    const timeAgo = i===0 ? '방금 전' : `${i+1}번째 방문자`;
-    el.innerHTML=`<div class="rev-who">💬 ${timeAgo}</div><div class="rev-t">${x.comment}</div>`;
+  const r = rats.filter(x => x.exhibitionId === id);
+  document.getElementById('revCnt').textContent = r.length;
+  const list = document.getElementById('revList'); list.innerHTML = '';
+  if(!r.length) { list.innerHTML = '<div class="empty"><div class="empty-ico">✍️</div>첫 번째로 마음을 남겨보세요!</div>'; return; }
+  r.forEach(x => {
+    const u = users.find(u => u.id === x.userId);
+    const who = u ? `${u.school} ${u.major}` : '방문자';
+    const hearts = x.rating > 0
+      ? `${'♥'.repeat(x.rating)}${'♡'.repeat(5 - x.rating)}`
+      : '♥';
+    const el = document.createElement('div'); el.className = 'rev-item';
+    el.innerHTML = `
+      <div class="rev-who-row">
+        <span class="rev-who">🎓 ${who}</span>
+        <span class="rev-hearts">${hearts}</span>
+      </div>
+      <div class="rev-t">${x.comment}</div>`;
     list.appendChild(el);
   });
 }
@@ -1277,7 +1403,7 @@ function showCalEvs(ds) {
       <div class="cal-exc-bd">
         <div class="cal-exc-title">${ex.title}</div>
         <div class="cal-exc-meta">📍 ${ex.location} · ${ex.startDate} ~ ${ex.endDate}</div>
-        ${a?`<div class="cal-exc-rat"><span class="si">★</span><span class="rv">${a}</span><span class="rl">(${cnt}명)</span></div>`:''}
+        ${cnt?`<div class="cal-exc-rat"><span style="color:#be185d">♥</span><span class="rv">${cnt}개의 마음</span></div>`:''}
       </div>`;
     card.onclick=()=>showDetail(ex.id); list.appendChild(card);
   });
@@ -1370,31 +1496,45 @@ function renderDiscCards(list) {
 // ── MY PAGE ──
 function initMy() {
   if(!cu) {
-    // 비로그인 상태 — 게스트 화면 표시
     document.getElementById('profAv').textContent = '?';
-    document.getElementById('profName').textContent = '로그인이 필요해요';
-    document.getElementById('profSchool').textContent = '로그인하고 더 많은 기능을 이용해보세요';
+    document.getElementById('profName').textContent = '게스트';
+    document.getElementById('profSchool').textContent = '로그인하고 더 많은 기능을 사용해보세요';
+    document.getElementById('myEditBtn').textContent = '로그인 / 회원가입';
+    document.getElementById('myEditBtn').onclick = () => openAuth('login');
+    document.getElementById('myReviewNum').textContent = '0';
+    document.getElementById('myReviewCount').textContent = '0개의 소중한 기록';
     document.getElementById('myList').innerHTML = `
-      <div style="text-align:center;padding:28px 0">
-        <div style="font-size:40px;margin-bottom:12px">✍️</div>
-        <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">아직 남긴 마음이 없어요</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:20px">로그인하면 전시에 마음을 남길 수 있어요</div>
-        <button onclick="openAuth('login')" style="background:var(--accent);color:#fff;border:none;padding:12px 28px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">로그인 / 회원가입</button>
+      <div style="text-align:center;padding:24px 0">
+        <div style="font-size:36px;margin-bottom:10px">✍️</div>
+        <div style="font-size:13px;color:var(--muted)">로그인하면 전시에 마음을 남길 수 있어요</div>
       </div>`;
     document.getElementById('logoutBtn').style.display = 'none';
+    document.getElementById('mySettingMenu').style.display = 'none';
     return;
   }
+
+  document.getElementById('mySettingMenu').style.display = '';
   document.getElementById('logoutBtn').style.display = '';
+  document.getElementById('profAv').textContent = cu.username[0].toUpperCase();
   document.getElementById('profName').textContent = cu.username;
   document.getElementById('profSchool').textContent = `${cu.school} · ${cu.major}`;
-  document.getElementById('profAv').textContent = cu.username[0].toUpperCase();
+  document.getElementById('myEditBtn').textContent = 'Edit Profile';
+  document.getElementById('myEditBtn').onclick = null;
+
   const myR = rats.filter(r => r.userId === cu.id);
+  document.getElementById('myReviewNum').textContent = myR.length;
+  document.getElementById('myReviewCount').textContent = `${myR.length}개의 소중한 기록`;
+
   const list = document.getElementById('myList'); list.innerHTML = '';
-  if(!myR.length) { list.innerHTML = '<div class="empty"><div class="empty-ico">✍️</div>아직 남긴 마음이 없습니다.</div>'; return; }
+  if(!myR.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">✍️</div>아직 남긴 마음이 없습니다.</div>';
+    return;
+  }
   myR.forEach(c => {
     const ex = exs.find(e => e.id === c.exhibitionId); if(!ex) return;
     const el = document.createElement('div'); el.className = 'ci';
-    el.innerHTML = `<div style="font-size:12px;font-weight:700;margin-bottom:4px">${ex.title}</div><div class="ci-h">💬 내 마음</div><div class="ci-t">"${c.comment}"</div>`;
+    const hearts = c.rating > 0 ? `${'♥'.repeat(c.rating)}${'♡'.repeat(5-c.rating)} ${c.rating}점` : '💬 마음';
+    el.innerHTML = `<div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--ink)">${ex.title}</div><div class="ci-h">${hearts}</div><div class="ci-t">"${c.comment}"</div>`;
     list.appendChild(el);
   });
 }
