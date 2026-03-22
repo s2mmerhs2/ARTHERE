@@ -1,913 +1,1400 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=377f2d2821388f56ba124060c27ff5be"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARTHERE — 대학생 전시 탐색</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --ink: #2e1a33;
-            --paper: #f5f9f0;
-            --accent: #58355e;
-            --accent-dark: #3d2242;
-            --accent-light: #e8f0df;
-            --accent-mid: #8b6292;
-            --green: #c4d6b0;
-            --green-dark: #9ab88a;
-            --green-light: #edf4e6;
-            --muted: #7a6e7d;
-            --border: #dce8d0;
-            --card-bg: #ffffff;
-            --shadow-sm: 0 1px 4px rgba(88,53,94,0.07);
-            --shadow-md: 0 4px 20px rgba(88,53,94,0.12);
-            --shadow-lg: 0 12px 40px rgba(88,53,94,0.18);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; background: var(--paper); color: var(--ink); font-family: 'Noto Sans KR', sans-serif; }
-        .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ARTHERE</title>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=377f2d2821388f56ba124060c27ff5be&libraries=services&autoload=false"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── Aurora color palette (Lovi-inspired) ── */
+:root {
+  --aurora-1: #7b8cde; /* periwinkle blue */
+  --aurora-2: #a78bfa; /* soft violet */
+  --aurora-3: #c084fc; /* lavender purple */
+  --aurora-4: #e879f9; /* pink purple */
+  --aurora-5: #f0abfc; /* light pink */
+  --accent: #6d4fc2;   /* primary purple */
+  --accent-dark: #4c35a0;
+  --accent-light: #ede9fe;
+  --accent-soft: rgba(109,79,194,.12);
+  --ink: #1a1a2e;
+  --ink2: #2d2d44;
+  --muted: #9096a8;
+  --paper: #ffffff;
+  --white: #ffffff;
+  --border: #ebebf0;
+  --surface: #f7f7f9;
+  --card: #ffffff;
+  --sh1: 0 1px 4px rgba(0,0,0,.06);
+  --sh2: 0 4px 18px rgba(0,0,0,.1);
+  --sh3: 0 12px 36px rgba(0,0,0,.15);
+  --aurora-bg: linear-gradient(135deg, #a8b8f8 0%, #b89afa 30%, #d08cf5 60%, #e8a4f8 85%, #f5bef9 100%);
+  --aurora-dark: linear-gradient(155deg, #2a1f5c 0%, #4a2878 40%, #7a3a9a 70%, #9a4ab0 100%);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; background:#f0f0f0; }
+body {
+  height:100%;
+  font-family:'Noto Sans KR',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex; align-items:center; justify-content:center;
+  background: #ebebeb;
+}
 
-        .header { display: none; background: #f5f9f0; border-bottom: 1px solid var(--border); padding: 0 20px; height: 56px; align-items: center; justify-content: space-between; z-index: 100; flex-shrink: 0; }
-        .header.visible { display: flex; }
-        .header-logo { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 22px; letter-spacing: -0.5px; color: var(--ink); }
-        .header-logo span { color: var(--accent); }
-        .header-actions { display: flex; gap: 8px; }
-        .btn-pill { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--card-bg); color: var(--ink); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans KR', sans-serif; }
-        .btn-pill:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .btn-pill.accent { background: var(--green); color: var(--accent); border-color: var(--green); }
-        .btn-pill.accent:hover { background: var(--green-dark); border-color: var(--green-dark); }
+/* ── APP SHELL — mobile frame ── */
+.app-shell {
+  width:100%; max-width:430px; height:100vh; max-height:932px;
+  display:flex; flex-direction:column;
+  overflow:hidden; position:relative;
+  background:var(--paper);
+  box-shadow:0 0 60px rgba(109,79,194,.25);
+}
+@media (max-width:430px) {
+  .app-shell { max-height:100vh; box-shadow:none; }
+}
 
-        .main { flex: 1; overflow: hidden; position: relative; }
-        .page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; flex-direction: column; overflow: hidden; }
-        .page.active { display: flex; }
+/* ── HEADER ── */
+.hdr {
+  display:none; background:rgba(255,255,255,.92); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border); padding:0 16px; height:52px;
+  align-items:center; justify-content:space-between; z-index:200; flex-shrink:0;
+}
+.hdr.on { display:flex; }
+.hlogo { font-family:'Playfair Display',serif; font-weight:900; font-size:20px; letter-spacing:-.5px; color:var(--ink); }
+.hlogo b { background:var(--aurora-bg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.hbtns { display:flex; gap:6px; }
+.hbtn {
+  padding:6px 13px; border-radius:20px; border:none;
+  background:var(--accent-soft); color:var(--accent);
+  font-size:11px; font-weight:700; cursor:pointer; transition:all .2s;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.hbtn:hover { background:var(--accent); color:#fff; }
+.hbtn.primary { background:var(--accent); color:#fff; }
+.hbtn.primary:hover { background:var(--accent-dark); }
 
-        /* AUTH */
-        #authPage { align-items: center; justify-content: center; padding: 24px; background: linear-gradient(160deg, #2e1a33 0%, #58355e 55%, #7a4d82 100%); }
-        .auth-inner { width: 100%; max-width: 380px; }
-        .auth-logo { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 52px; color: var(--paper); letter-spacing: -2px; line-height: 1; margin-bottom: 4px; }
-        .auth-logo span { color: var(--green); }
-        .auth-tagline { color: rgba(255,255,255,0.5); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 36px; }
-        .auth-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 24px; backdrop-filter: blur(12px); }
-        .auth-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.07); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
-        .auth-tab { flex: 1; padding: 9px; border: none; background: transparent; color: rgba(255,255,255,0.5); cursor: pointer; border-radius: 9px; font-weight: 600; font-size: 13px; transition: all 0.2s; font-family: 'Noto Sans KR', sans-serif; }
-        .auth-tab.active { background: var(--green); color: var(--accent); }
-        .auth-form-content { display: none; }
-        .auth-form-content.active { display: block; }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-        .form-group input, .form-group select { width: 100%; padding: 11px 14px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; font-size: 13px; color: #fff; font-family: 'Noto Sans KR', sans-serif; transition: border-color 0.2s; }
-        .form-group input::placeholder { color: rgba(255,255,255,0.3); }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--green); }
-        .form-group select option { background: #58355e; color: #fff; }
-        .btn-auth { width: 100%; padding: 13px; background: var(--green); color: var(--accent); border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; font-family: 'Noto Sans KR', sans-serif; transition: background 0.2s; }
-        .btn-auth:hover { background: var(--green-dark); }
-        .auth-demo { margin-top: 12px; text-align: center; font-size: 11px; color: rgba(255,255,255,0.35); }
-        .auth-demo button { background: none; border: none; color: var(--green); cursor: pointer; font-size: 11px; font-family: 'Noto Sans KR', sans-serif; }
+/* ── PAGES ── */
+.main { flex:1; overflow:hidden; position:relative; }
+.pg { display:none; width:100%; height:100%; position:absolute; inset:0; flex-direction:column; overflow:hidden; }
+.pg.on { display:flex; }
+.scr { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
-        /* MAP */
-        #mapPage { position: relative; }
-        .map-search-bar { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; gap: 8px; }
-        .map-search-input { flex: 1; padding: 11px 16px; border-radius: 24px; border: none; background: white; box-shadow: var(--shadow-md); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; }
-        .map-search-input:focus { outline: none; }
-        .map-filter-btn { padding: 11px 14px; border-radius: 20px; border: none; background: white; box-shadow: var(--shadow-md); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink); font-family: 'Noto Sans KR', sans-serif; transition: all 0.2s; white-space: nowrap; }
-        .map-filter-btn.active-filter { background: var(--accent); color: var(--green); }
-        #map { width: 100%; height: 100%; }
+/* ═══════════════════════════════
+   SPLASH — Aurora gradient
+═══════════════════════════════ */
+#pgSplash {
+  align-items:center; justify-content:flex-end; padding:0 28px 56px;
+  background: var(--aurora-dark);
+  position:relative; overflow:hidden;
+}
+/* Aurora blobs */
+#pgSplash::before {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(120,140,230,.55) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 75% 15%, rgba(190,130,250,.5) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 55% at 50% 60%, rgba(200,80,240,.35) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 40% at 85% 70%, rgba(240,160,250,.4) 0%, transparent 65%);
+  pointer-events:none;
+}
+#pgSplash::after {
+  content:''; position:absolute; bottom:-80px; left:-40px; right:-40px; height:200px;
+  background:rgba(255,255,255,.07); border-radius:50%; filter:blur(30px);
+}
+.spl-brand {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-70%);
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+}
+.spl-icon {
+  width:80px; height:80px; border-radius:22px;
+  background:rgba(255,255,255,.15); backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.25);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Playfair Display',serif; font-weight:900; font-size:28px; color:#fff;
+  letter-spacing:-1px;
+  box-shadow:0 8px 32px rgba(0,0,0,.2);
+}
+.spl-name { font-family:'Playfair Display',serif; font-weight:900; font-size:38px; color:#fff; letter-spacing:-1px; }
+.spl-tagline { font-size:13px; color:rgba(255,255,255,.7); text-align:center; line-height:1.5; }
+.spl-actions { width:100%; display:flex; flex-direction:column; gap:10px; position:relative; z-index:2; }
+.spl-btn-main {
+  width:100%; padding:17px;
+  background:#fff; color:var(--ink2);
+  border:none; border-radius:50px;
+  font-size:15px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+  transition:all .2s;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);
+}
+.spl-btn-main:hover { background:#f0eeff; transform:translateY(-1px); }
+.spl-btn-ghost {
+  width:100%; padding:15px;
+  background:transparent; color:rgba(255,255,255,.85);
+  border:none;
+  font-size:14px; font-weight:500;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+  transition:all .2s;
+}
+.spl-btn-ghost:hover { color:#fff; }
+.spl-legal { font-size:10px; color:rgba(255,255,255,.3); text-align:center; line-height:1.6; margin-top:4px; }
+.spl-legal a { color:rgba(255,255,255,.5); text-decoration:underline; }
 
-        /* BOTTOM SHEET */
-        .bottom-sheet { position: absolute; bottom: 0; left: 0; right: 0; background: #f5f9f0; border-radius: 20px 20px 0 0; max-height: 55vh; overflow-y: auto; z-index: 400; box-shadow: 0 -8px 30px rgba(88,53,94,0.14); transform: translateY(0); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
-        .bottom-sheet.hidden { transform: translateY(110%); pointer-events: none; }
-        .bs-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
-        .bs-content { padding: 14px 16px 24px; }
-        .bs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .bs-title { font-size: 14px; font-weight: 700; }
-        .bs-count { font-size: 12px; color: var(--muted); }
+/* ═══════════════════════════════
+   AUTH SHEET
+═══════════════════════════════ */
+.auth-ov {
+  display:none; position:fixed; inset:0; z-index:2000;
+  background:rgba(20,14,50,.6); backdrop-filter:blur(4px);
+  align-items:flex-end; justify-content:center;
+}
+.auth-ov.on { display:flex; }
+.auth-sheet {
+  width:100%; max-width:430px;
+  background:#fff; border-radius:28px 28px 0 0;
+  padding:0 22px 40px; position:relative;
+  animation:slideUp .35s cubic-bezier(.32,.72,0,1);
+  max-height:92vh; overflow-y:auto;
+}
+.auth-top-band {
+  height:5px; background:var(--aurora-bg);
+  border-radius:28px 28px 0 0; margin:0 -22px; margin-bottom:20px;
+}
+.ash-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 22px; }
+.ash-close { position:absolute; top:16px; right:18px; background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; }
+.ash-title { font-family:'Playfair Display',serif; font-size:22px; color:var(--ink); font-weight:700; margin-bottom:3px; }
+.ash-sub { font-size:12px; color:var(--muted); margin-bottom:20px; }
+.atabs { display:flex; gap:3px; background:var(--surface); border-radius:12px; padding:3px; margin-bottom:18px; }
+.atab { flex:1; padding:9px; border:none; background:transparent; color:var(--muted); cursor:pointer; border-radius:9px; font-weight:600; font-size:13px; transition:all .2s; font-family:'Noto Sans KR',sans-serif; }
+.atab.on { background:#fff; color:var(--accent); box-shadow:var(--sh1); }
+.afc { display:none; }
+.afc.on { display:block; }
+.fg { margin-bottom:12px; }
+.fg label { display:block; font-size:10px; font-weight:700; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:5px; }
+.fg input, .fg select {
+  width:100%; padding:12px 14px; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:12px;
+  font-size:13px; color:var(--ink); font-family:'Noto Sans KR',sans-serif; transition:border-color .2s;
+}
+.fg input::placeholder { color:var(--muted); }
+.fg input:focus, .fg select:focus { outline:none; border-color:var(--accent); background:#fff; }
+.btn-auth {
+  width:100%; padding:14px; background:var(--accent); color:#fff;
+  border:none; border-radius:14px; font-size:14px; font-weight:700;
+  cursor:pointer; margin-top:6px; font-family:'Noto Sans KR',sans-serif; transition:background .2s;
+}
+.btn-auth:hover { background:var(--accent-dark); }
 
-        /* EXHIBITION CARD */
-        .ex-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; display: flex; gap: 12px; align-items: flex-start; }
-        .ex-card:hover { box-shadow: var(--shadow-md); border-color: var(--green-dark); transform: translateY(-1px); }
-        .ex-card-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-        .ex-card-icon.student { background: var(--green-light); }
-        .ex-card-icon.graduation { background: var(--accent-light); }
-        .ex-card-body { flex: 1; min-width: 0; }
-        .ex-card-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 5px; }
-        .badge-student { background: var(--green-light); color: #4a6e35; }
-        .badge-graduation { background: var(--accent-light); color: var(--accent); }
-        .ex-card-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ex-card-meta { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
-        .ex-card-rating { font-size: 11px; font-weight: 600; color: var(--accent); }
+/* ═══════════════════════════════
+   MAP PAGE
+═══════════════════════════════ */
+#pgMap { position:relative; }
+.map-bar {
+  position:absolute; top:10px; left:10px; right:10px; z-index:500;
+  display:flex; gap:6px;
+}
+.map-search {
+  flex:1; padding:10px 15px; border-radius:22px; border:none;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+  box-shadow:var(--sh2); font-size:13px; font-family:'Noto Sans KR',sans-serif;
+}
+.map-search:focus { outline:none; }
+.mfbtn {
+  padding:10px 12px; border-radius:18px; border:none;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+  box-shadow:var(--sh2); cursor:pointer; font-size:11px; font-weight:700;
+  color:var(--ink2); font-family:'Noto Sans KR',sans-serif; transition:all .2s; white-space:nowrap;
+}
+.mfbtn.on { background:var(--accent); color:#fff; }
+#map { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; }
+.loc-fab {
+  position:absolute; bottom:80px; right:12px; z-index:500;
+  width:44px; height:44px; border-radius:50%;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+  border:none; box-shadow:var(--sh2);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .2s;
+}
+.loc-fab:hover { background:var(--accent); }
+.loc-fab:hover svg path, .loc-fab:hover svg circle { stroke:#fff; }
+.loc-fab svg { width:20px; height:20px; }
 
-        /* BOTTOM NAV */
-        .bottom-nav { display: none; background: #f5f9f0; border-top: 1px solid var(--border); height: 60px; flex-shrink: 0; z-index: 300; }
-        .bottom-nav.visible { display: flex; }
-        .nav-inner { display: flex; width: 100%; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border: none; background: none; color: var(--muted); font-size: 10px; font-weight: 500; padding: 8px 0; font-family: 'Noto Sans KR', sans-serif; transition: color 0.2s; position: relative; }
-        .nav-item.active { color: var(--accent); font-weight: 700; }
-        .nav-item.active::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2px; background: var(--green); border-radius: 0 0 2px 2px; }
-        .nav-icon { width: 22px; height: 22px; }
+/* ── BOTTOM SHEET ── */
+.bsht {
+  position:absolute; bottom:0; left:0; right:0;
+  background:var(--white); border-radius:24px 24px 0 0;
+  max-height:70vh; overflow-y:auto; z-index:400;
+  box-shadow:0 -8px 32px rgba(109,79,194,.18);
+  transform:translateY(0); transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+.bsht.hide { transform:translateY(110%); pointer-events:none; }
+.bsh-pip { width:36px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 0; }
+.bsh-body { padding:14px 16px 32px; }
 
-        .scroll-page { flex: 1; overflow-y: auto; padding: 16px; }
+/* Selected exhibition — HERO CARD (large) */
+.bsh-hero {
+  border-radius:20px; overflow:hidden; margin-bottom:16px;
+  cursor:pointer; transition:transform .2s, box-shadow .2s;
+  box-shadow:var(--sh2);
+}
+.bsh-hero:hover { transform:translateY(-2px); box-shadow:var(--sh3); }
+.bsh-hero-img {
+  height:160px; display:flex; align-items:center; justify-content:center;
+  font-size:60px; position:relative;
+}
+.bsh-hero-img-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom, transparent 30%, rgba(20,14,50,.75) 100%);
+}
+.bsh-hero-body {
+  background:var(--accent); padding:16px;
+}
+.bsh-hero-tag {
+  font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+  color:rgba(255,255,255,.55); margin-bottom:6px;
+}
+.bsh-hero-title {
+  font-family:'Playfair Display',serif; font-size:20px; font-weight:700;
+  color:#fff; line-height:1.25; margin-bottom:8px;
+}
+.bsh-hero-meta {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.bsh-hero-chip {
+  background:rgba(255,255,255,.15); color:rgba(255,255,255,.85);
+  font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px;
+}
+.bsh-hero-rating {
+  margin-left:auto; font-size:13px; font-weight:700; color:rgba(255,255,255,.9);
+}
+.bsh-nearby-hdr { font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.8px; text-transform:uppercase; margin-bottom:10px; }
 
-        /* CALENDAR */
-        .section-header { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 16px; color: var(--ink); }
-        .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-        .cal-month { font-size: 16px; font-weight: 700; }
-        .cal-nav-btn { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; color: var(--ink); font-family: 'Noto Sans KR', sans-serif; transition: all 0.2s; }
-        .cal-nav-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 16px; }
-        .cal-day-header { text-align: center; font-size: 10px; font-weight: 700; color: var(--muted); padding: 4px 0; letter-spacing: 0.5px; }
-        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-size: 11px; color: var(--ink); cursor: pointer; border: 1px solid transparent; transition: all 0.15s; position: relative; gap: 2px; }
-        .cal-day:hover { border-color: var(--accent); background: var(--accent-light); }
-        .cal-day.has-event { background: var(--green-light); color: #3a5528; font-weight: 700; }
-        .cal-dots { display: flex; gap: 2px; }
-        .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green-dark); }
-        .cal-dot.grad { background: var(--accent-mid); }
-        .cal-day.today { background: var(--accent); color: #fff; font-weight: 700; }
-        .cal-day.today .cal-dot { background: var(--green); }
-        .cal-day.selected { border: 2px solid var(--accent); }
-        .cal-day.today.selected { border: 2px solid var(--green); }
-        .cal-events-title { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+/* ── NEARBY CARDS ── */
+.exc {
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:12px; margin-bottom:10px; cursor:pointer; transition:all .2s;
+  display:flex; gap:12px; align-items:flex-start;
+}
+.exc:hover { box-shadow:var(--sh2); border-color:var(--accent); transform:translateY(-1px); }
+.exc-ph {
+  width:52px; height:52px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+}
+.exc-ph.s { background:linear-gradient(135deg,#e0f2fe,#bae6fd); }
+.exc-ph.g { background:linear-gradient(135deg,var(--accent-light),#ddd6fe); }
+.exc-bd { flex:1; min-width:0; }
+.exc-badge {
+  display:inline-block; padding:2px 8px; border-radius:6px;
+  font-size:9px; font-weight:700; letter-spacing:.4px; margin-bottom:4px;
+}
+.exc-badge.s { background:#e0f2fe; color:#0369a1; }
+.exc-badge.g { background:var(--accent-light); color:var(--accent); }
+.exc-title { font-size:13px; font-weight:700; color:var(--ink); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.exc-loc { font-size:11px; color:var(--muted); margin-bottom:2px; }
+.exc-rat { font-size:11px; font-weight:700; color:#be185d; }
 
-        /* POPULAR */
-        .pop-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 14px; }
-        .pop-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-        .pop-rank { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--border); line-height: 1; min-width: 40px; }
-        .pop-rank.top { color: var(--green-dark); }
-        .pop-body { flex: 1; min-width: 0; }
-        .pop-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pop-meta { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
-        .pop-rating { font-size: 12px; font-weight: 700; color: var(--accent); }
+/* ── BOTTOM NAV ── */
+.bnav {
+  display:none; flex-shrink:0; z-index:300;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(12px);
+  border-top:1px solid var(--border); height:62px;
+}
+.bnav.on { display:flex; }
+.bnav-inner { display:flex; width:100%; }
+.ni {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; cursor:pointer; border:none; background:none;
+  color:var(--muted); font-size:10px; font-weight:500; padding:8px 0;
+  font-family:'Noto Sans KR',sans-serif; transition:color .2s; position:relative;
+}
+.ni.on { color:var(--accent); font-weight:700; }
+.ni.on::after {
+  content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:24px; height:3px;
+  background:var(--aurora-bg); border-radius:0 0 3px 3px;
+}
+.ni svg { width:22px; height:22px; }
 
-        /* DETAIL */
-        #detailPage { overflow-y: auto; }
-        .detail-scroll { padding: 16px; padding-bottom: 32px; }
-        .back-btn { background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; padding: 0; margin-bottom: 14px; display: flex; align-items: center; gap: 4px; transition: color 0.2s; }
-        .back-btn:hover { color: var(--accent); }
-        .detail-hero { border-radius: 16px; padding: 20px; margin-bottom: 16px; position: relative; overflow: hidden; }
-        .detail-hero::before { content: '🎨'; position: absolute; right: 16px; bottom: -8px; font-size: 80px; opacity: 0.12; }
-        .detail-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; margin-bottom: 10px; }
-        .detail-badge.student { background: rgba(196,214,176,0.3); color: #c4d6b0; }
-        .detail-badge.graduation { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); }
-        .detail-title-text { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 12px; }
-        .detail-meta-row { display: flex; gap: 16px; }
-        .detail-meta-item { font-size: 11px; color: rgba(255,255,255,0.6); }
-        .detail-meta-item strong { color: rgba(255,255,255,0.9); display: block; font-size: 12px; margin-top: 2px; }
-        .detail-desc { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.7; color: #555; }
-        .detail-section-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+/* ═══════════════════════════════
+   CALENDAR PAGE
+═══════════════════════════════ */
+#pgCal .scr { padding:20px 16px 24px; }
+.pg-title { font-family:'Playfair Display',serif; font-size:26px; font-weight:900; color:var(--ink); margin-bottom:2px; }
+.pg-sub { font-size:12px; color:var(--muted); margin-bottom:18px; }
+.cal-card { background:var(--white); border-radius:20px; padding:18px; margin-bottom:18px; box-shadow:var(--sh1); border:1px solid var(--border); }
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-nbtn {
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:var(--surface); cursor:pointer; font-size:16px; color:var(--ink);
+  display:flex; align-items:center; justify-content:center; transition:all .2s;
+}
+.cal-nbtn:hover { background:var(--accent); color:#fff; }
+.cal-mlbl { font-size:15px; font-weight:700; color:var(--ink); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.cal-dh { text-align:center; font-size:10px; font-weight:600; color:var(--muted); padding:4px 0; }
+.cal-d {
+  aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:10px; font-size:12px; color:var(--ink); cursor:pointer;
+  border:1.5px solid transparent; transition:all .15s; gap:2px;
+}
+.cal-d:hover { background:#f5f5f7; border-color:var(--accent); }
+.cal-d.ev { background:#f5f5f7; color:var(--ink); font-weight:700; }
+.cal-dots { display:flex; gap:2px; }
+.cal-dot { width:4px; height:4px; border-radius:50%; background:#9096a8; }
+.cal-dot.gr { background:#b0b0b8; }
+.cal-d.td { background:var(--accent); color:#fff; font-weight:700; }
+.cal-d.td .cal-dot { background:rgba(255,255,255,.8); }
+.cal-d.sl { border-color:var(--accent) !important; }
+.cal-shdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-stitle { font-size:16px; font-weight:700; color:var(--ink); }
+.cal-badge {
+  font-size:11px; font-weight:700; padding:3px 12px; border-radius:20px;
+  background:var(--accent-light); color:var(--accent);
+}
+/* Calendar exhibition card */
+.cal-exc {
+  background:var(--white); border:1px solid var(--border); border-radius:16px;
+  padding:13px; margin-bottom:10px; cursor:pointer; transition:all .2s;
+  display:flex; gap:12px; align-items:center; box-shadow:var(--sh1);
+}
+.cal-exc:hover { box-shadow:var(--sh2); transform:translateY(-1px); }
+.cal-exc-ph {
+  width:62px; height:62px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+}
+.cal-exc-ph.s { background:#f0f0f2; }
+.cal-exc-ph.g { background:#ebebed; }
+.cal-exc-bd { flex:1; min-width:0; }
+.cal-exc-title { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-exc-meta { font-size:11px; color:var(--muted); margin-bottom:5px; }
+.cal-exc-rat { display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700; }
+.cal-exc-rat .si { color:#f59e0b; }
+.cal-exc-rat .rv { color:var(--ink); }
+.cal-exc-rat .rl { color:var(--muted); font-size:10px; font-weight:400; }
 
-        /* RATING */
-        .rating-stars { display: flex; gap: 6px; margin-bottom: 10px; }
-        .star { font-size: 26px; cursor: pointer; opacity: 0.2; transition: opacity 0.15s, transform 0.15s; color: var(--accent); }
-        .star:hover, .star.filled { opacity: 1; transform: scale(1.1); }
-        .rating-textarea { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--ink); font-family: 'Noto Sans KR', sans-serif; min-height: 70px; resize: none; margin-bottom: 10px; }
-        .rating-textarea:focus { outline: none; border-color: var(--accent); }
-        .btn-submit { background: var(--accent); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; font-family: 'Noto Sans KR', sans-serif; transition: background 0.2s; }
-        .btn-submit:hover { background: var(--accent-dark); }
-        .comment-item { background: var(--green-light); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; }
-        .comment-stars { font-size: 11px; color: var(--accent); font-weight: 700; margin-bottom: 3px; }
-        .comment-text { font-size: 12px; color: #555; line-height: 1.5; }
+/* ═══════════════════════════════
+   DISCOVER PAGE
+═══════════════════════════════ */
+#pgPop .scr { padding:0 0 32px; }
+/* Header */
+.disc-hdr { padding:24px 18px 16px; }
+.disc-curated { font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.disc-title { font-family:'Playfair Display',serif; font-size:28px; font-weight:900; color:var(--ink); line-height:1.2; margin-bottom:6px; }
+.disc-sub { font-size:12px; color:var(--muted); line-height:1.5; }
+/* Hero featured card */
+.disc-hero-wrap { padding:0 18px; margin-bottom:20px; }
+.disc-hero {
+  border-radius:20px; overflow:hidden; cursor:pointer;
+  position:relative; box-shadow:var(--sh2); transition:transform .2s;
+}
+.disc-hero:hover { transform:translateY(-2px); }
+.disc-hero-img {
+  height:220px; display:flex; align-items:center; justify-content:center;
+  font-size:72px; position:relative;
+}
+.disc-hero-img-ov {
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom, rgba(0,0,0,.02) 0%, rgba(0,0,0,.65) 100%);
+}
+.disc-hero-featured {
+  position:absolute; top:14px; left:14px;
+  background:var(--accent); color:#fff;
+  font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+  padding:5px 12px; border-radius:20px;
+}
+.disc-hero-body {
+  position:absolute; bottom:0; left:0; right:0; padding:18px;
+}
+.disc-hero-title {
+  font-family:'Playfair Display',serif; font-size:22px; font-weight:900;
+  color:#fff; line-height:1.25; margin-bottom:5px;
+  text-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.disc-hero-meta { font-size:12px; color:rgba(255,255,255,.75); }
+/* Category pills */
+.disc-cats {
+  display:flex; gap:8px; padding:0 18px 20px;
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.disc-cats::-webkit-scrollbar { display:none; }
+.dcat {
+  padding:8px 16px; border-radius:20px; border:1.5px solid var(--border);
+  background:var(--white); color:var(--ink2); font-size:12px; font-weight:600;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+  transition:all .2s; white-space:nowrap; flex-shrink:0;
+}
+.dcat.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+/* Section header */
+.disc-sec-hdr { display:flex; align-items:center; justify-content:space-between; padding:0 18px; margin-bottom:14px; }
+.disc-sec-title { font-size:16px; font-weight:700; color:var(--ink); }
+.disc-sort { font-size:11px; color:var(--muted); font-weight:500; }
+/* Match card — full-width image */
+.disc-card {
+  margin:0 18px 20px; cursor:pointer; transition:transform .2s;
+  border-radius:16px; overflow:hidden; background:var(--white);
+  box-shadow:var(--sh1); border:1px solid var(--border);
+}
+.disc-card:hover { transform:translateY(-2px); box-shadow:var(--sh2); }
+.disc-card-img {
+  width:100%; height:200px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:64px; position:relative; overflow:hidden;
+}
+.disc-card-badge {
+  position:absolute; top:12px; right:12px;
+  background:rgba(255,255,255,.95);
+  font-size:11px; font-weight:700; color:var(--ink);
+  padding:5px 12px; border-radius:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+  display:flex; align-items:center; gap:4px;
+}
+.disc-card-badge.match { color:#16a34a; }
+.disc-card-badge.trend { color:#dc2626; }
+.disc-card-body { padding:14px 16px; }
+.disc-card-cat { font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.disc-card-title { font-size:16px; font-weight:700; color:var(--ink); line-height:1.3; margin-bottom:6px; }
+.disc-card-loc { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:4px; margin-bottom:3px; }
+.disc-card-date { font-size:11px; color:var(--muted); }
 
-        /* MY PAGE */
-        .profile-card { background: linear-gradient(135deg, #2e1a33 0%, #58355e 100%); border-radius: 16px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
-        .profile-avatar { width: 50px; height: 50px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--accent); font-weight: 700; font-family: 'Playfair Display', serif; flex-shrink: 0; }
-        .profile-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-        .profile-school { font-size: 12px; color: rgba(255,255,255,0.6); }
-        .section-block { margin-bottom: 20px; }
-        .section-block-title { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-        .btn-logout { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--card-bg); color: var(--ink); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.2s; }
-        .btn-logout:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+/* ═══════════════════════════════
+   MY PAGE
+═══════════════════════════════ */
+#pgMy .scr { padding:20px 16px 24px; }
+.prof-card {
+  border-radius:20px; padding:22px; margin-bottom:20px;
+  background:var(--aurora-dark); position:relative; overflow:hidden;
+}
+.prof-card::before {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(167,139,250,.4) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 20% 70%, rgba(192,132,252,.3) 0%, transparent 65%);
+  pointer-events:none;
+}
+.prof-inner { position:relative; z-index:1; display:flex; align-items:center; gap:14px; }
+.prof-av {
+  width:52px; height:52px; border-radius:50%;
+  background:rgba(255,255,255,.2); backdrop-filter:blur(8px);
+  border:2px solid rgba(255,255,255,.3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; color:#fff; font-weight:700; font-family:'Playfair Display',serif; flex-shrink:0;
+}
+.prof-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:3px; }
+.prof-school { font-size:12px; color:rgba(255,255,255,.55); }
+.sec-hdr2 { font-size:11px; font-weight:700; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+.ci { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+.ci-h { font-size:13px; color:#be185d; margin-bottom:3px; }
+.ci-t { font-size:12px; color:#555; line-height:1.5; }
+.btn-lo { width:100%; padding:13px; border:1.5px solid var(--border); background:var(--white); color:var(--ink); border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; margin-top:10px; }
+.btn-lo:hover { background:#fee2e2; border-color:#fca5a5; color:#dc2626; }
 
-        /* MODAL */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(46,26,51,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-        .modal.active { display: flex; }
-        .modal-box { background: var(--paper); border-radius: 20px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; }
-        .modal-header { padding: 18px 18px 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
-        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); padding: 0; line-height: 1; }
-        .modal-body { padding: 0 18px 24px; }
-        .modal .form-group label { color: var(--muted); font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
-        .modal .form-group input, .modal .form-group select, .modal .form-group textarea { background: var(--card-bg); border: 1px solid var(--border); color: var(--ink); border-radius: 10px; padding: 10px 13px; font-family: 'Noto Sans KR', sans-serif; }
-        .modal .form-group input::placeholder { color: var(--muted); }
-        .modal .form-group input:focus, .modal .form-group select:focus, .modal .form-group textarea:focus { outline: none; border-color: var(--accent); }
-        .modal .form-group select option { background: var(--paper); color: var(--ink); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-modal-submit { width: 100%; padding: 13px; background: var(--green); color: var(--accent); border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; margin-top: 6px; transition: background 0.2s; }
-        .btn-modal-submit:hover { background: var(--green-dark); }
+/* ═══════════════════════════════
+   DETAIL PAGE
+═══════════════════════════════ */
+#pgDet { overflow-y:auto; background:var(--white); }
+.det-hero {
+  position:relative; width:100%; padding-top:60%; overflow:hidden; flex-shrink:0;
+  background:var(--surface);
+}
+.det-hero-ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:72px; }
+.det-ov { position:absolute; inset:0; background:linear-gradient(to bottom, rgba(20,14,50,0) 30%, rgba(20,14,50,.78) 100%); }
+.det-top { position:absolute; top:12px; left:12px; right:12px; display:flex; align-items:center; justify-content:space-between; z-index:2; }
+.det-back {
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,.9); backdrop-filter:blur(8px);
+  border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:16px; color:var(--ink); box-shadow:var(--sh1);
+}
+.det-open-pill {
+  background:rgba(109,79,194,.7); color:rgba(255,255,255,.9);
+  font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+  padding:5px 12px; border-radius:20px; backdrop-filter:blur(8px);
+}
+.det-btm { position:absolute; bottom:0; left:0; right:0; padding:18px; z-index:2; }
+.det-title { font-family:'Playfair Display',serif; font-size:24px; font-weight:900; color:#fff; line-height:1.25; margin-bottom:6px; text-shadow:0 2px 10px rgba(0,0,0,.4); }
+.det-dates { font-size:11px; color:rgba(255,255,255,.7); display:flex; gap:8px; flex-wrap:wrap; }
+.det-body { padding:18px 16px 48px; background:var(--white); }
+.det-dv {
+  display:grid; grid-template-columns:1fr 1fr; gap:1px;
+  background:var(--border); border-radius:16px; overflow:hidden; margin-bottom:20px;
+}
+.det-dv-cell { background:var(--white); padding:14px; }
+.det-dv-lbl { font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.det-dv-val { font-size:13px; font-weight:700; color:var(--ink); line-height:1.4; }
+.det-sec { margin-bottom:24px; }
+.det-sec-t {
+  font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:10px; padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.det-desc { font-size:13px; line-height:1.8; color:#4a4060; }
+.art-row { display:flex; align-items:flex-start; gap:13px; }
+.art-av {
+  width:46px; height:46px; border-radius:50%; background:var(--surface);
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:700; color:var(--accent); font-family:'Playfair Display',serif;
+}
+.art-name { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:3px; }
+.art-bio { font-size:12px; color:var(--muted); line-height:1.6; }
+.det-mmap { width:100%; height:140px; border-radius:14px; overflow:hidden; background:var(--surface); margin-bottom:8px; }
+.det-addr { font-size:12px; color:var(--muted); }
+.rat-box { background:var(--surface); border-radius:16px; padding:16px; }
+.hts { display:flex; gap:8px; margin-bottom:12px; }
+.ht { font-size:28px; cursor:pointer; opacity:.2; transition:opacity .15s, transform .15s; color:#be185d; line-height:1; user-select:none; }
+.ht:hover, .ht.on { opacity:1; transform:scale(1.15); }
+.rat-ta {
+  width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:12px;
+  font-size:13px; color:var(--ink); font-family:'Noto Sans KR',sans-serif;
+  min-height:70px; resize:none; margin-bottom:10px; background:var(--white);
+}
+.rat-ta:focus { outline:none; border-color:var(--accent); }
+.btn-sub {
+  width:100%; padding:13px; background:var(--accent); color:#fff;
+  border:none; border-radius:12px; font-size:13px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:background .2s;
+}
+.btn-sub:hover { background:var(--accent-dark); }
+.lp { text-align:center; padding:20px; background:var(--surface); border-radius:14px; }
+.lp p { font-size:13px; color:var(--muted); margin-bottom:12px; }
+.lp button {
+  background:var(--accent); color:#fff; border:none; padding:11px 24px;
+  border-radius:12px; font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.rev-item { background:var(--surface); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+.rev-who { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:.5px; margin-bottom:5px; }
+.rev-t { font-size:13px; color:var(--ink); line-height:1.6; }
 
-        .empty-state { text-align: center; padding: 24px; color: var(--muted); font-size: 12px; }
-        .empty-state .big { font-size: 32px; margin-bottom: 8px; }
-        /* Leaflet 마커 기본 흰 박스 제거 */
-        .leaflet-div-icon { background: transparent !important; border: none !important; }
+/* ── ADD MODAL ── */
+.modal { display:none; position:fixed; inset:0; background:rgba(20,14,50,.55); z-index:2100; align-items:center; justify-content:center; padding:18px; backdrop-filter:blur(4px); }
+.modal.on { display:flex; }
+.modal-box { background:var(--paper); border-radius:22px; width:100%; max-width:400px; max-height:90vh; overflow-y:auto; }
+.modal-hdr { padding:18px 18px 0; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.modal-ttl { font-family:'Playfair Display',serif; font-size:19px; font-weight:700; }
+.modal-x { background:none; border:none; font-size:22px; cursor:pointer; color:var(--muted); }
+.modal-body { padding:0 18px 24px; }
+.modal .fg input, .modal .fg select, .modal .fg textarea { background:var(--white); border:1.5px solid var(--border); color:var(--ink); border-radius:12px; padding:10px 13px; font-family:'Noto Sans KR',sans-serif; width:100%; }
+.modal .fg input:focus, .modal .fg select:focus, .modal .fg textarea:focus { outline:none; border-color:var(--accent); }
+.frow { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.btn-ms { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; margin-top:6px; }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 2px; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .slide-up { animation: slideUp 0.3s ease forwards; }
-    </style>
+/* ── UTILS ── */
+.empty { text-align:center; padding:32px; color:var(--muted); font-size:12px; }
+.empty-ico { font-size:36px; margin-bottom:10px; }
+.kakao-marker {
+  border-radius:20px; padding:5px 11px; font-size:11px; font-weight:700;
+  font-family:'Noto Sans KR',sans-serif; white-space:nowrap; cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.22); border:2px solid rgba(255,255,255,.6);
+  position:relative;
+}
+.kakao-marker::after {
+  content:''; position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
+  width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent;
+}
+.kakao-marker.s { background:#5b6ef5; color:#fff; }
+.kakao-marker.s::after { border-top:7px solid #5b6ef5; }
+.kakao-marker.g { background:#6d4fc2; color:#fff; }
+.kakao-marker.g::after { border-top:7px solid #6d4fc2; }
+.kakao-marker.sel { background:#be185d; border-color:#fff; }
+.kakao-marker.sel::after { border-top-color:#be185d; }
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-thumb { background:var(--aurora-2); border-radius:2px; }
+@keyframes slideUp { from { transform:translateY(28px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.su { animation:slideUp .3s ease forwards; }
+</style>
 </head>
 <body>
-<div class="app">
-    <div class="header" id="header">
-        <div class="header-logo">ART<span>HERE</span></div>
-        <div class="header-actions">
-            <button class="btn-pill accent" id="headerAddBtn">＋ 등록</button>
-            <button class="btn-pill" id="headerMyBtn">내 정보</button>
-        </div>
+<div class="app-shell">
+
+  <!-- HEADER -->
+  <div class="hdr" id="hdr">
+    <div class="hlogo">ART<b>HERE</b></div>
+    <div class="hbtns">
+      <button class="hbtn primary" id="hAddBtn">＋ 등록</button>
+      <button class="hbtn" id="hMyBtn">내 정보</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ① SPLASH -->
+    <div class="pg on" id="pgSplash">
+      <div class="spl-brand">
+        <div class="spl-icon">AR</div>
+        <div class="spl-name">ARTHERE</div>
+        <div class="spl-tagline">대학생 전시 탐색 플랫폼<br>당신 주변의 예술을 발견하세요</div>
+      </div>
+      <div class="spl-actions">
+        <button class="spl-btn-main" onclick="startWithLocation()">주변 전시 탐색하기</button>
+        <button class="spl-btn-ghost" onclick="openAuth('login')">로그인 / 회원가입</button>
+        <div class="spl-legal">계속 진행하면 <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의하는 것으로 간주합니다.</div>
+      </div>
     </div>
 
-    <div class="main">
-        <!-- AUTH -->
-        <div class="page active" id="authPage">
-            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#2e1a33 0%,#58355e 55%,#7a4d82 100%);">
-                <div class="auth-inner">
-                    <div class="auth-logo">ART<span>HERE</span></div>
-                    <div class="auth-tagline">대학생 전시 탐색 플랫폼</div>
-                    <div class="auth-card">
-                        <div class="auth-tabs">
-                            <button class="auth-tab active" data-tab="login">로그인</button>
-                            <button class="auth-tab" data-tab="signup">회원가입</button>
-                        </div>
-                        <div class="auth-form-content active" id="loginForm">
-                            <div class="form-group"><label>이메일</label><input type="email" id="loginEmail" placeholder="your@email.com"></div>
-                            <div class="form-group"><label>비밀번호</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
-                            <button class="btn-auth" id="loginBtn">로그인</button>
-                            <div class="auth-demo">계정이 없으신가요? <button onclick="demoLogin()">데모로 입장</button></div>
-                        </div>
-                        <div class="auth-form-content" id="signupForm">
-                            <div class="form-group"><label>사용자명</label><input type="text" id="signupUsername" placeholder="당신의 이름"></div>
-                            <div class="form-group"><label>이메일</label><input type="email" id="signupEmail" placeholder="your@email.com"></div>
-                            <div class="form-group"><label>비밀번호</label><input type="password" id="signupPassword" placeholder="••••••••"></div>
-                            <div class="form-group"><label>학교</label><input type="text" id="signupSchool" placeholder="예: 국민대학교"></div>
-                            <div class="form-group"><label>학과</label><input type="text" id="signupMajor" placeholder="예: 시각디자인학과"></div>
-                            <button class="btn-auth" id="signupBtn">회원가입</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- MAP -->
-        <div class="page" id="mapPage" style="position:relative;">
-            <div class="map-search-bar">
-                <input type="text" class="map-search-input" id="locationInput" placeholder="🔍  위치 또는 전시명 검색">
-                <button class="map-filter-btn active-filter" id="filterAll" onclick="setFilter('all')">전체</button>
-                <button class="map-filter-btn" id="filterStudent" onclick="setFilter('student')">기획</button>
-                <button class="map-filter-btn" id="filterGrad" onclick="setFilter('graduation')">졸전</button>
-            </div>
-            <div id="map" style="width:100%;height:100%;"></div>
-            <div class="bottom-sheet hidden" id="bottomSheet">
-                <div class="bs-handle"></div>
-                <div class="bs-content">
-                    <div class="bs-header">
-                        <div class="bs-title" id="bsTitle">근처 전시</div>
-                        <div class="bs-count" id="bsCount"></div>
-                    </div>
-                    <div id="sheetExhibitions"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CALENDAR -->
-        <div class="page" id="calendarPage">
-            <div class="scroll-page">
-                <div class="section-header">전시 캘린더</div>
-                <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;">
-                    <div class="cal-nav">
-                        <button class="cal-nav-btn" id="prevMonthBtn">◀</button>
-                        <div class="cal-month" id="calendarMonth"></div>
-                        <button class="cal-nav-btn" id="nextMonthBtn">▶</button>
-                    </div>
-                    <div class="cal-grid" id="calendarGrid"></div>
-                </div>
-                <div class="cal-events-title" id="calEventsTitle">날짜를 선택하세요</div>
-                <div id="calendarEventsList"></div>
-            </div>
-        </div>
-
-        <!-- POPULAR -->
-        <div class="page" id="popularPage">
-            <div class="scroll-page">
-                <div class="section-header">추천 전시</div>
-                <div id="popularList"></div>
-            </div>
-        </div>
-
-        <!-- MY PAGE -->
-        <div class="page" id="myPage">
-            <div class="scroll-page">
-                <div class="profile-card" id="profileCard">
-                    <div class="profile-avatar" id="profileAvatar">A</div>
-                    <div>
-                        <div class="profile-name" id="profileName">사용자</div>
-                        <div class="profile-school" id="profileSchool">학교 · 학과</div>
-                    </div>
-                </div>
-                <div class="section-block">
-                    <div class="section-block-title">내가 남긴 평가</div>
-                    <div id="myCommentsList"></div>
-                </div>
-                <button class="btn-logout" id="logoutBtn">로그아웃</button>
-            </div>
-        </div>
-
-        <!-- DETAIL -->
-        <div class="page" id="detailPage">
-            <div class="detail-scroll">
-                <button class="back-btn" id="backBtn">← 목록으로</button>
-                <div class="detail-hero" id="detailHero">
-                    <span class="detail-badge" id="detailBadge"></span>
-                    <div class="detail-title-text" id="detailTitle"></div>
-                    <div class="detail-meta-row">
-                        <div class="detail-meta-item">📍 위치<strong id="detailLocation"></strong></div>
-                        <div class="detail-meta-item">📅 기간<strong id="detailDate"></strong></div>
-                    </div>
-                </div>
-                <div class="detail-desc" id="detailDescription"></div>
-                <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;">
-                    <div class="detail-section-title">⭐ 평가하기</div>
-                    <div class="rating-stars" id="ratingInput"></div>
-                    <textarea class="rating-textarea" id="commentInput" placeholder="전시에 대한 의견을 작성해주세요..."></textarea>
-                    <button class="btn-submit" id="submitRatingBtn">평가 등록</button>
-                </div>
-                <div>
-                    <div class="detail-section-title">방문자 리뷰 (<span id="ratingCount">0</span>)</div>
-                    <div id="commentsList"></div>
-                </div>
-            </div>
-        </div>
+    <!-- ② MAP -->
+    <div class="pg" id="pgMap" style="position:relative">
+      <div class="map-bar">
+        <input type="text" class="map-search" placeholder="🔍  전시명 또는 위치 검색">
+        <button class="mfbtn on" id="fa" onclick="setFilter('all')">전체</button>
+        <button class="mfbtn" id="fs" onclick="setFilter('student')">기획</button>
+        <button class="mfbtn" id="fg" onclick="setFilter('graduation')">졸전</button>
+      </div>
+      <div id="map" style="width:100%;height:100%"></div>
+      <button class="loc-fab" id="locFab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#6d4fc2" stroke-width="2.2">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+          <circle cx="12" cy="12" r="9" stroke-dasharray="2 4" stroke-width="1.2" opacity=".4"/>
+        </svg>
+      </button>
+      <div class="bsht hide" id="bsht">
+        <div class="bsh-pip"></div>
+        <div class="bsh-body" id="bshBody"></div>
+      </div>
     </div>
 
-    <div class="bottom-nav" id="bottomNav">
-        <div class="nav-inner">
-            <button class="nav-item active" data-page="mapPage">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                지도
-            </button>
-            <button class="nav-item" data-page="calendarPage">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                캘린더
-            </button>
-            <button class="nav-item" data-page="popularPage">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                추천
-            </button>
-            <button class="nav-item" data-page="myPage">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                마이
-            </button>
+    <!-- ③ CALENDAR -->
+    <div class="pg" id="pgCal">
+      <div class="scr" id="calScr">
+        <div class="pg-title">전시 캘린더</div>
+        <div class="pg-sub" id="calSub">당신의 예술적 여정을 기록하세요</div>
+        <div class="cal-card">
+          <div class="cal-nav">
+            <button class="cal-nbtn" id="prevM">&#8249;</button>
+            <div class="cal-mlbl" id="calMlbl"></div>
+            <button class="cal-nbtn" id="nextM">&#8250;</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
         </div>
+        <div class="cal-shdr">
+          <div class="cal-stitle" id="calDtTitle">오늘의 전시</div>
+          <div class="cal-badge" id="calBadge" style="display:none"></div>
+        </div>
+        <div id="calList"></div>
+      </div>
     </div>
+
+    <!-- ④ DISCOVER (Popular) -->
+    <div class="pg" id="pgPop">
+      <div class="scr" id="popScr">
+        <!-- Header -->
+        <div class="disc-hdr">
+          <div class="disc-curated">CURATED FOR YOU</div>
+          <div class="disc-title">나를 위한<br>추천 전시</div>
+          <div class="disc-sub" id="popSubTxt">당신의 취향에 맞게 큐레이션된 전시를 만나보세요</div>
+        </div>
+        <!-- Weekly Featured Hero -->
+        <div class="disc-hero-wrap" id="discHero"></div>
+        <!-- Category Filters -->
+        <div class="disc-cats" id="discCats">
+          <button class="dcat on" data-cat="all">All Works</button>
+          <button class="dcat" data-cat="student">대학생 기획</button>
+          <button class="dcat" data-cat="graduation">졸업전시</button>
+          <button class="dcat" data-cat="photo">사진</button>
+          <button class="dcat" data-cat="install">설치</button>
+        </div>
+        <!-- Match Section -->
+        <div class="disc-sec-hdr">
+          <div class="disc-sec-title">당신의 취향 분석 결과</div>
+          <div class="disc-sort">정확도순</div>
+        </div>
+        <div id="discMatchList"></div>
+      </div>
+    </div>
+
+    <!-- ⑤ MY -->
+    <div class="pg" id="pgMy">
+      <div class="scr">
+        <div class="prof-card">
+          <div class="prof-inner">
+            <div class="prof-av" id="profAv">A</div>
+            <div>
+              <div class="prof-name" id="profName">사용자</div>
+              <div class="prof-school" id="profSchool">학교 · 학과</div>
+            </div>
+          </div>
+        </div>
+        <div class="sec-hdr2">내가 남긴 평가</div>
+        <div id="myList"></div>
+        <button class="btn-lo" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+
+    <!-- ⑥ DETAIL -->
+    <div class="pg" id="pgDet">
+      <div class="det-hero" id="detHero">
+        <div class="det-hero-ph" id="detPh"></div>
+        <div class="det-ov"></div>
+        <div class="det-top">
+          <button class="det-back" id="backBtn">←</button>
+          <div class="det-open-pill">EXHIBITION NOW OPEN</div>
+        </div>
+        <div class="det-btm">
+          <div class="det-title" id="detTitle"></div>
+          <div class="det-dates" id="detDates"></div>
+        </div>
+      </div>
+      <div class="det-body">
+        <div class="det-dv">
+          <div class="det-dv-cell"><div class="det-dv-lbl">DATE</div><div class="det-dv-val" id="detDate"></div></div>
+          <div class="det-dv-cell"><div class="det-dv-lbl">VENUE</div><div class="det-dv-val" id="detVenue"></div></div>
+        </div>
+        <div class="det-sec">
+          <div class="det-sec-t">About Exhibition</div>
+          <div class="det-desc" id="detDesc"></div>
+        </div>
+        <div class="det-sec" id="detArtSec">
+          <div class="det-sec-t">작가소개</div>
+          <div class="art-row">
+            <div class="art-av" id="detArtAv"></div>
+            <div><div class="art-name" id="detArtName"></div><div class="art-bio" id="detArtBio"></div></div>
+          </div>
+        </div>
+        <div class="det-sec">
+          <div class="det-sec-t">위치</div>
+          <div class="det-mmap" id="detMmap"></div>
+          <div class="det-addr" id="detAddr"></div>
+        </div>
+        <div class="det-sec">
+          <div class="det-sec-t">✏️ 내 마음 남기기</div>
+          <div class="rat-box" id="ratBox"></div>
+        </div>
+        <div class="det-sec">
+          <div class="det-sec-t">방문자 리뷰 (<span id="revCnt">0</span>)</div>
+          <div id="revList"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav" id="bnav">
+    <div class="bnav-inner">
+      <button class="ni on" data-pg="pgMap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>지도
+      </button>
+      <button class="ni" data-pg="pgCal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>캘린더
+      </button>
+      <button class="ni" data-pg="pgPop">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>둘러보기
+      </button>
+      <button class="ni" data-pg="pgMy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>마이
+      </button>
+    </div>
+  </div>
+
+</div><!-- /app-shell -->
+
+<!-- AUTH SHEET -->
+<div class="auth-ov" id="authOv">
+  <div class="auth-sheet">
+    <div class="auth-top-band"></div>
+    <button class="ash-close" onclick="closeAuth()">&times;</button>
+    <div class="ash-title" id="ashTitle">로그인</div>
+    <div class="ash-sub">계속하려면 로그인이 필요해요</div>
+    <div class="atabs">
+      <button class="atab on" data-t="login">로그인</button>
+      <button class="atab" data-t="signup">회원가입</button>
+    </div>
+    <div class="afc on" id="loginForm">
+      <div class="fg"><label>이메일</label><input type="email" id="lemail" placeholder="your@email.com"></div>
+      <div class="fg"><label>비밀번호</label><input type="password" id="lpw" placeholder="••••••••"></div>
+      <button class="btn-auth" id="loginBtn">로그인</button>
+    </div>
+    <div class="afc" id="signupForm">
+      <div class="fg"><label>이름</label><input type="text" id="suname" placeholder="이름"></div>
+      <div class="fg"><label>이메일</label><input type="email" id="suemail" placeholder="your@email.com"></div>
+      <div class="fg"><label>비밀번호</label><input type="password" id="supw" placeholder="••••••••"></div>
+      <div class="fg"><label>학교</label><input type="text" id="suschool" placeholder="예: 국민대학교"></div>
+      <div class="fg"><label>학과</label><input type="text" id="sumajor" placeholder="예: 시각디자인학과"></div>
+      <button class="btn-auth" id="signupBtn">회원가입</button>
+    </div>
+  </div>
 </div>
 
-<!-- MODAL -->
-<div class="modal" id="addExhibitionModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title">전시 등록</div>
-            <button class="modal-close" id="closeModalBtn">&times;</button>
+<!-- ADD MODAL -->
+<div class="modal" id="addModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><div class="modal-ttl">전시 등록</div><button class="modal-x" id="closeAdd">&times;</button></div>
+    <div class="modal-body">
+      <form id="addForm">
+        <div class="fg"><label>전시명 *</label><input type="text" id="exTitle" required></div>
+        <div class="fg"><label>유형 *</label><select id="exType" required><option value="">선택</option><option value="student">대학생 기획</option><option value="graduation">졸업전시</option></select></div>
+        <div class="fg"><label>장소</label><input type="text" id="exLoc"></div>
+        <div class="frow">
+          <div class="fg"><label>위도</label><input type="number" id="exLat" step=".0001" placeholder="37.5665"></div>
+          <div class="fg"><label>경도</label><input type="number" id="exLng" step=".0001" placeholder="126.9780"></div>
         </div>
-        <div class="modal-body">
-            <form id="addExhibitionForm">
-                <div class="form-group"><label>전시명 *</label><input type="text" id="exhibitionTitle" placeholder="전시 제목" required></div>
-                <div class="form-group">
-                    <label>유형 *</label>
-                    <select id="exhibitionType" required><option value="">선택...</option><option value="student">대학생 기획</option><option value="graduation">졸업 전시</option></select>
-                </div>
-                <div class="form-group"><label>위치 *</label><input type="text" id="exhibitionLocation" placeholder="갤러리명 또는 주소"></div>
-                <div class="form-row">
-                    <div class="form-group"><label>위도 *</label><input type="number" id="exhibitionLat" step="0.0001" placeholder="37.5665"></div>
-                    <div class="form-group"><label>경도 *</label><input type="number" id="exhibitionLng" step="0.0001" placeholder="126.9780"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>시작일 *</label><input type="date" id="exhibitionStartDate" required></div>
-                    <div class="form-group"><label>종료일 *</label><input type="date" id="exhibitionEndDate" required></div>
-                </div>
-                <div class="form-group"><label>설명</label><textarea id="exhibitionDescription" style="min-height:70px;resize:none;" placeholder="전시 소개를 입력해주세요"></textarea></div>
-                <button type="submit" class="btn-modal-submit">전시 등록하기</button>
-            </form>
+        <div class="frow">
+          <div class="fg"><label>시작일</label><input type="date" id="exStart" required></div>
+          <div class="fg"><label>종료일</label><input type="date" id="exEnd" required></div>
         </div>
+        <div class="fg"><label>설명</label><textarea id="exDesc" style="min-height:65px;resize:none"></textarea></div>
+        <button type="submit" class="btn-ms">등록하기</button>
+      </form>
     </div>
+  </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- Kakao Maps loaded in head -->
 <script>
-    let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    let exhibitions = JSON.parse(localStorage.getItem('exhibitions')) || [];
-    let ratings = JSON.parse(localStorage.getItem('ratings')) || [];
-    let users = JSON.parse(localStorage.getItem('users')) || [];
-    let map, currentExhibitionId, markers = [];
-    let currentCalendarMonth = new Date().getMonth();
-    let currentCalendarYear = new Date().getFullYear();
-    let currentFilter = 'all';
-    let previousPage = 'mapPage';
-    let selectedCalDate = null;
+// ── STATE ──
+let cu = JSON.parse(localStorage.getItem('cu'));
+let exs = JSON.parse(localStorage.getItem('exs')) || [];
+let rats = JSON.parse(localStorage.getItem('rats')) || [];
+let users = JSON.parse(localStorage.getItem('users')) || [];
+let map, curExId, markers=[], selMarkId=null, myLocM=null, detMM=null;
+let calM=new Date().getMonth(), calY=new Date().getFullYear();
+let curFilter='all', prevPg='pgMap', selCal=null;
 
-    // ── 더미 평가 (전시당 10~13개) ──
-    const dummyRatings = [
-        {id:101,exhibitionId:1,userId:901,rating:5,comment:"홍대 특유의 에너지가 넘치는 전시였어요. 신진 작가들의 실험적인 시도가 인상적이었습니다."},
-        {id:102,exhibitionId:1,userId:902,rating:4,comment:"흥미로운 시각과 표현 방식이 많았어요. 작가들의 열정이 느껴졌습니다."},
-        {id:103,exhibitionId:1,userId:903,rating:5,comment:"신진 작가들의 에너지와 열정이 작품 하나하나에 묻어났어요!"},
-        {id:104,exhibitionId:1,userId:904,rating:4,comment:"다양한 매체를 활용한 실험적 작품들이 눈에 띄었습니다. 다시 방문하고 싶어요."},
-        {id:105,exhibitionId:1,userId:905,rating:5,comment:"미술관이 아닌 갤러리에서 이 정도 수준을 기대 못 했는데 정말 놀랐어요."},
-        {id:106,exhibitionId:1,userId:906,rating:3,comment:"작품 수가 조금 적었지만 각각의 완성도는 높았습니다."},
-        {id:107,exhibitionId:1,userId:907,rating:5,comment:"젊은 감각이 넘치는 전시. 예술계의 미래가 밝아 보입니다."},
-        {id:108,exhibitionId:1,userId:908,rating:4,comment:"설치미술 파트가 특히 좋았어요. 공간 활용이 창의적이었습니다."},
-        {id:109,exhibitionId:1,userId:909,rating:5,comment:"색감이 풍부하고 메시지가 명확한 작품들로 가득했어요."},
-        {id:110,exhibitionId:1,userId:910,rating:4,comment:"전반적으로 완성도가 높고 기획이 탄탄했습니다."},
-        {id:111,exhibitionId:1,userId:911,rating:5,comment:"주말에 친구랑 갔는데 둘 다 감탄했어요. 강력 추천!"},
-        {id:201,exhibitionId:2,userId:801,rating:5,comment:"역량이 정말 뛰어나요! 졸업 작품인데 전문 디자이너 수준입니다."},
-        {id:202,exhibitionId:2,userId:802,rating:4,comment:"수준이 높았습니다. 브랜딩 프로젝트들이 특히 완성도가 좋았어요."},
-        {id:203,exhibitionId:2,userId:803,rating:5,comment:"미래 디자이너들의 포트폴리오를 직접 볼 수 있어서 좋았어요."},
-        {id:204,exhibitionId:2,userId:804,rating:5,comment:"UI/UX 디자인 파트가 인상 깊었습니다. 트렌디하면서도 독창적이에요."},
-        {id:205,exhibitionId:2,userId:805,rating:4,comment:"각 작품마다 컨셉이 명확하고 완성도가 높았습니다."},
-        {id:206,exhibitionId:2,userId:806,rating:5,comment:"자부심이 느껴지는 작품들이었어요. 국민대 디자인 최고!"},
-        {id:207,exhibitionId:2,userId:807,rating:4,comment:"굿즈 디자인 섹션이 특히 탐났어요. 실제로 구매하고 싶은 것들이 많았습니다."},
-        {id:208,exhibitionId:2,userId:808,rating:5,comment:"전시 공간 구성도 훌륭했어요. 작품과 공간이 어우러져 있었습니다."},
-        {id:209,exhibitionId:2,userId:809,rating:3,comment:"일부 작품은 비슷한 느낌이라 다양성이 조금 아쉬웠지만 전체적으로 좋았습니다."},
-        {id:210,exhibitionId:2,userId:810,rating:5,comment:"졸업전시 중 최고 수준이라 생각해요. 다음에도 꼭 오겠습니다."},
-        {id:211,exhibitionId:2,userId:811,rating:4,comment:"패키지 디자인 작품들이 특히 눈에 띄었어요."},
-        {id:212,exhibitionId:2,userId:812,rating:5,comment:"작가와 직접 대화할 수 있어서 더욱 의미 있었습니다."},
-        {id:301,exhibitionId:3,userId:701,rating:5,comment:"주제를 잘 표현했어요. 페미니즘을 예술로 풀어낸 방식이 신선했습니다."},
-        {id:302,exhibitionId:3,userId:702,rating:4,comment:"의미 있는 해석! 사회적 메시지가 작품에 잘 녹아있었어요."},
-        {id:303,exhibitionId:3,userId:703,rating:5,comment:"주제 표현이 직접적이면서도 예술적으로 완성도가 높았습니다."},
-        {id:304,exhibitionId:3,userId:704,rating:5,comment:"공감할 수 있는 이야기들이 많았어요. 오랫동안 기억에 남을 것 같아요."},
-        {id:305,exhibitionId:3,userId:705,rating:4,comment:"영상 작품 파트가 특히 강렬했어요. 감정을 잘 전달하는 작품이었습니다."},
-        {id:306,exhibitionId:3,userId:706,rating:5,comment:"이런 전시가 더 많아져야 한다고 생각해요. 사회적으로 의미 있는 기획입니다."},
-        {id:307,exhibitionId:3,userId:707,rating:4,comment:"다양한 시각으로 주제를 접근한 것이 인상적이었어요."},
-        {id:308,exhibitionId:3,userId:708,rating:5,comment:"작품 하나하나에 작가의 고민이 느껴졌습니다."},
-        {id:309,exhibitionId:3,userId:709,rating:3,comment:"일부 작품은 메시지가 조금 과했지만 전체적인 기획은 훌륭했어요."},
-        {id:310,exhibitionId:3,userId:710,rating:4,comment:"사진 작품들의 구도와 색감이 특히 좋았습니다."},
-        {id:401,exhibitionId:4,userId:601,rating:5,comment:"새로운 가능성! 설치미술이 이렇게 인터랙티브할 수 있다는 걸 알게 됐어요."},
-        {id:402,exhibitionId:4,userId:602,rating:5,comment:"관람객이 직접 참여하는 설치물이 정말 신선했어요."},
-        {id:403,exhibitionId:4,userId:603,rating:4,comment:"공간을 적극적으로 활용한 대형 설치물들이 인상적이었습니다."},
-        {id:404,exhibitionId:4,userId:604,rating:5,comment:"창의로운 발상이 돋보이는 전시였어요. 기술과 예술의 조화가 멋있었습니다."},
-        {id:405,exhibitionId:4,userId:605,rating:4,comment:"재활용 소재를 활용한 작품들이 특히 의미 있었습니다."},
-        {id:406,exhibitionId:4,userId:606,rating:5,comment:"참여형 작품이 많아서 아이들과 함께 와도 재밌을 것 같아요!"},
-        {id:407,exhibitionId:4,userId:607,rating:4,comment:"전시 공간 자체가 하나의 작품 같았습니다. 동선도 잘 짜여 있었어요."},
-        {id:408,exhibitionId:4,userId:608,rating:3,comment:"몇몇 작품은 완성도가 조금 아쉬웠지만 아이디어는 훌륭했어요."},
-        {id:409,exhibitionId:4,userId:609,rating:5,comment:"빛을 활용한 설치물이 특히 아름다웠습니다. 사진도 잘 나와요!"},
-        {id:410,exhibitionId:4,userId:610,rating:5,comment:"인터랙션 디자인 전공자로서 많은 영감을 받았어요."},
-        {id:411,exhibitionId:4,userId:611,rating:4,comment:"전시 설명 카드가 잘 작성되어 있어 이해가 쉬웠습니다."},
-        {id:501,exhibitionId:5,userId:501,rating:5,comment:"아름다움을 잘 담았어요. 일상의 순간들이 이렇게 예술이 될 수 있군요."},
-        {id:502,exhibitionId:5,userId:502,rating:4,comment:"감정 표현이 좋습니다. 사진이 글보다 더 많은 것을 말해준다는 걸 느꼈어요."},
-        {id:503,exhibitionId:5,userId:503,rating:5,comment:"진짜 감동받았어요. 특히 마지막 섹션의 흑백 사진들이 오래 기억에 남을 것 같아요."},
-        {id:504,exhibitionId:5,userId:504,rating:5,comment:"색감이 살아있는 사진들이 많았어요. 프린트 품질도 훌륭했습니다."},
-        {id:505,exhibitionId:5,userId:505,rating:4,comment:"거리 사진 파트가 특히 좋았어요. 서울의 일상을 새롭게 보게 됐습니다."},
-        {id:506,exhibitionId:5,userId:506,rating:5,comment:"작가들의 눈이 남다르다는 걸 느꼈어요. 같은 장소도 다르게 보이더라고요."},
-        {id:507,exhibitionId:5,userId:507,rating:4,comment:"사진 한 장 한 장에 작가의 이야기가 담겨 있어 흥미로웠어요."},
-        {id:508,exhibitionId:5,userId:508,rating:5,comment:"감수성이 풍부한 전시였어요. 내면의 감정을 사진으로 표현한 섹션이 특히 인상 깊었습니다."},
-        {id:509,exhibitionId:5,userId:509,rating:4,comment:"사진전이지만 글과 함께 전시되어 더 깊은 의미를 느낄 수 있었어요."},
-        {id:510,exhibitionId:5,userId:510,rating:5,comment:"사진 애호가라면 반드시 방문해야 할 전시입니다!"},
-        {id:511,exhibitionId:5,userId:511,rating:3,comment:"일부 작품은 조금 비슷한 테마가 반복되었지만 전체적으로는 완성도가 높았습니다."},
-        {id:601,exhibitionId:6,userId:411,rating:4,comment:"새로운 씬을 알게 됐어요. 강남 지역 신진 작가들의 다양한 스타일이 한눈에 보였습니다."},
-        {id:602,exhibitionId:6,userId:412,rating:4,comment:"다양한 작품들! 서로 다른 스타일이 공존하는 전시였어요."},
-        {id:603,exhibitionId:6,userId:413,rating:5,comment:"12명의 작가들이 각기 다른 개성을 보여줘서 풍성한 전시였어요."},
-        {id:604,exhibitionId:6,userId:414,rating:4,comment:"구상 회화부터 추상까지 다양한 장르를 한 번에 볼 수 있어서 좋았어요."},
-        {id:605,exhibitionId:6,userId:415,rating:5,comment:"처음에는 작가가 너무 많아서 산만하지 않을까 했는데, 기획이 잘 되어 통일성도 있었어요."},
-        {id:606,exhibitionId:6,userId:416,rating:3,comment:"작품 수가 많아 하나하나 집중하기 어려웠지만 다양성은 인정합니다."},
-        {id:607,exhibitionId:6,userId:417,rating:4,comment:"특히 조각 작품들이 눈에 띄었어요. 공간을 잘 활용했습니다."},
-        {id:608,exhibitionId:6,userId:418,rating:5,comment:"신진 작가들의 패기가 느껴지는 전시! 앞으로가 기대되는 작가들이 많았어요."},
-        {id:609,exhibitionId:6,userId:419,rating:4,comment:"작품 큐레이션이 훌륭했어요. 관람 동선도 자연스러웠습니다."},
-        {id:610,exhibitionId:6,userId:420,rating:4,comment:"이런 신진 작가 기획전이 더 자주 있으면 좋겠어요."},
-        {id:701,exhibitionId:7,userId:311,rating:5,comment:"결합이 멋있었어요! 패션과 예술의 경계를 허물었습니다."},
-        {id:702,exhibitionId:7,userId:312,rating:5,comment:"완성도가 높네요. 상업 브랜드와 비교해도 손색없는 수준이에요."},
-        {id:703,exhibitionId:7,userId:313,rating:5,comment:"창의성이 돋보여요. 패션을 통해 사회적 메시지를 전달한 작품들이 인상적이었습니다."},
-        {id:704,exhibitionId:7,userId:314,rating:4,comment:"실제로 입고 싶은 옷들이 너무 많았어요. 디자인 감각이 뛰어납니다."},
-        {id:705,exhibitionId:7,userId:315,rating:5,comment:"지속가능한 패션 주제의 컬렉션이 특히 의미 있었어요."},
-        {id:706,exhibitionId:7,userId:316,rating:4,comment:"무대 패션쇼도 병행해 주면 더 좋을 것 같아요. 작품 자체는 훌륭합니다."},
-        {id:707,exhibitionId:7,userId:317,rating:5,comment:"전통 한복에서 영감받은 현대적 재해석이 놀라웠어요."},
-        {id:708,exhibitionId:7,userId:318,rating:5,comment:"패션 전공자라면 꼭 와야 할 전시예요. 너무 많은 영감을 받았습니다."},
-        {id:709,exhibitionId:7,userId:319,rating:4,comment:"섬세한 바느질과 소재 선택이 돋보였어요."},
-        {id:710,exhibitionId:7,userId:320,rating:5,comment:"작품 하나하나에 스토리가 있어서 더욱 풍성한 관람이었습니다."},
-        {id:711,exhibitionId:7,userId:321,rating:4,comment:"어시스턴트 큐레이터분이 친절하게 작품 설명을 해주셔서 더욱 좋았어요."},
-        {id:801,exhibitionId:8,userId:221,rating:4,comment:"만남이 신선했어요. 기술과 예술의 경계가 이렇게 허물어질 수 있다는 것을 느꼈어요."},
-        {id:802,exhibitionId:8,userId:222,rating:5,comment:"가능성을 잘 보여줬어요. AR 작품들이 특히 인상적이었어요."},
-        {id:803,exhibitionId:8,userId:223,rating:5,comment:"표현이 인상적! 기술을 예술 도구로 활용한 방식이 탁월했어요."},
-        {id:804,exhibitionId:8,userId:224,rating:4,comment:"인터랙티브 미디어아트를 처음 접했는데 이렇게 감동적일 줄 몰랐어요."},
-        {id:805,exhibitionId:8,userId:225,rating:5,comment:"음향과 시각이 조화를 이루는 몰입형 설치 작품이 최고였습니다."},
-        {id:806,exhibitionId:8,userId:226,rating:3,comment:"기술적 측면은 뛰어났지만 예술적 메시지가 조금 약한 작품들도 있었어요."},
-        {id:807,exhibitionId:8,userId:227,rating:5,comment:"VR 체험 코너가 너무 좋았어요! 꼭 경험해보세요."},
-        {id:808,exhibitionId:8,userId:228,rating:4,comment:"전공자가 아니어도 쉽게 즐길 수 있어서 접근성이 좋았어요."},
-        {id:809,exhibitionId:8,userId:229,rating:5,comment:"예술과 공학의 융합이 이렇게 아름다울 수 있다니. 감탄했습니다."},
-        {id:810,exhibitionId:8,userId:230,rating:4,comment:"다음 학기 전시도 기대가 됩니다. 이런 실험적 시도를 계속 해주세요!"},
-        {id:901,exhibitionId:9,userId:171,rating:5,comment:"감정이 전해져요. 캔버스에서 작가의 온기가 느껴지는 전시였어요."},
-        {id:902,exhibitionId:9,userId:172,rating:4,comment:"색감이 아름다워요. 파스텔 톤의 회화 작품들이 특히 마음에 들었습니다."},
-        {id:903,exhibitionId:9,userId:173,rating:5,comment:"구상과 추상을 넘나드는 작품들이 다양한 감동을 선사했어요."},
-        {id:904,exhibitionId:9,userId:174,rating:4,comment:"수준이 높아요. 졸업전시 치고는 너무 프로급이라 놀랐어요."},
-        {id:905,exhibitionId:9,userId:175,rating:5,comment:"특히 대형 캔버스 작품들이 압도적이었습니다. 오래 바라보게 되더라고요."},
-        {id:906,exhibitionId:9,userId:176,rating:4,comment:"동양화와 서양화 사이의 경계를 탐구한 작품들이 인상 깊었어요."},
-        {id:907,exhibitionId:9,userId:177,rating:5,comment:"각 작품마다 작가의 개성이 뚜렷하게 느껴졌어요. 방문할 가치가 충분합니다."},
-        {id:908,exhibitionId:9,userId:178,rating:3,comment:"전시 공간이 조금 좁아서 작품 감상이 다소 불편했지만 작품 자체는 훌륭했어요."},
-        {id:909,exhibitionId:9,userId:179,rating:5,comment:"회화의 힘을 다시 느끼게 된 전시였어요."},
-        {id:910,exhibitionId:9,userId:180,rating:4,comment:"졸업 작품집도 구매했어요. 기념이 될 것 같아 기분이 좋습니다."},
-        {id:911,exhibitionId:9,userId:181,rating:5,comment:"이 중에서 꼭 기억할 작가가 있을 것 같아요. 앞으로의 활동이 기대됩니다."},
-        {id:1001,exhibitionId:10,userId:141,rating:5,comment:"공간감이 뛰어나요. 조소 작품들이 공간과 대화하는 느낌이었습니다."},
-        {id:1002,exhibitionId:10,userId:142,rating:4,comment:"섬세함이 돋보여요. 세밀한 조각 작업에 감탄했어요."},
-        {id:1003,exhibitionId:10,userId:143,rating:5,comment:"멋있었어요! 재료의 다양성이 인상적이었습니다."},
-        {id:1004,exhibitionId:10,userId:144,rating:5,comment:"나무, 석고, 금속 등 다양한 소재를 활용한 작품들이 흥미로웠어요."},
-        {id:1005,exhibitionId:10,userId:145,rating:4,comment:"야외 공간에 설치된 조각들이 자연과 어우러져 더욱 아름다웠습니다."},
-        {id:1006,exhibitionId:10,userId:146,rating:5,comment:"일상 사물을 조각으로 재해석한 작품이 특히 유머러스하고 좋았어요."},
-        {id:1007,exhibitionId:10,userId:147,rating:4,comment:"규모가 큰 작품들이 많아서 시원스러운 느낌이 들었어요."},
-        {id:1008,exhibitionId:10,userId:148,rating:3,comment:"관람 공간이 다소 협소해서 대형 작품들을 한눈에 담기 어려웠어요."},
-        {id:1009,exhibitionId:10,userId:149,rating:5,comment:"인체 조각 섹션이 특히 인상 깊었습니다. 생동감이 넘쳤어요."},
-        {id:1010,exhibitionId:10,userId:150,rating:4,comment:"작품 옆에 QR코드로 작가 인터뷰를 볼 수 있어서 더욱 풍성한 감상이 됐어요."},
-        {id:1101,exhibitionId:11,userId:121,rating:5,comment:"새로운 표현! 디지털 아트가 이렇게 다양해질 수 있다는 걸 새삼 느꼈어요."},
-        {id:1102,exhibitionId:11,userId:122,rating:4,comment:"가능성이 보여요. NFT와 연계된 작품들이 미래지향적이었습니다."},
-        {id:1103,exhibitionId:11,userId:123,rating:5,comment:"방향이 보여요. 디지털 예술의 무한한 가능성을 확인했습니다."},
-        {id:1104,exhibitionId:11,userId:124,rating:5,comment:"디지털임에도 온기와 감성이 느껴지는 작품들이 인상적이었어요."},
-        {id:1105,exhibitionId:11,userId:125,rating:4,comment:"제너러티브 아트 섹션이 특히 흥미로웠어요. 알고리즘과 예술의 만남!"},
-        {id:1106,exhibitionId:11,userId:126,rating:3,comment:"기술적 측면이 강조되다 보니 예술적 감동은 조금 부족했어요."},
-        {id:1107,exhibitionId:11,userId:127,rating:5,comment:"온라인으로도 감상할 수 있어서 정말 편리했어요. 접근성 최고!"},
-        {id:1108,exhibitionId:11,userId:128,rating:4,comment:"픽셀 아트에서 3D 렌더링까지 다양한 디지털 매체를 활용한 작품들이 좋았어요."},
-        {id:1109,exhibitionId:11,userId:129,rating:5,comment:"디지털 아트의 새로운 경지를 경험했습니다. 이런 시도가 계속 이어지길 바랍니다."},
-        {id:1110,exhibitionId:11,userId:130,rating:4,comment:"전시 플랫폼 자체도 잘 만들어져 있어서 온라인 감상도 즐거웠어요."},
-        {id:1201,exhibitionId:12,userId:111,rating:5,comment:"전통과 현대의 만남! 판화가 이렇게 현대적으로 재해석될 수 있다는 게 놀라웠어요."},
-        {id:1202,exhibitionId:12,userId:112,rating:4,comment:"다양성이 좋아요. 전통 기법과 현대적 감성이 잘 어우러졌습니다."},
-        {id:1203,exhibitionId:12,userId:113,rating:5,comment:"아름다움을 느껴요. 판화 특유의 질감이 살아있는 작품들이 많았어요."},
-        {id:1204,exhibitionId:12,userId:114,rating:4,comment:"실크스크린 작품들의 색감이 정말 아름다웠어요."},
-        {id:1205,exhibitionId:12,userId:115,rating:5,comment:"목판화의 투박함과 현대적 디자인이 만나니 독특한 미감이 생겨났어요."},
-        {id:1206,exhibitionId:12,userId:116,rating:4,comment:"작품마다 제작 과정을 볼 수 있어서 이해가 더 깊어졌습니다."},
-        {id:1207,exhibitionId:12,userId:117,rating:5,comment:"한지를 활용한 판화 작품이 특히 인상적이었어요. 한국적 감성이 물씬 풍겼습니다."},
-        {id:1208,exhibitionId:12,userId:118,rating:3,comment:"전통 판화는 좋았지만 일부 현대적 재해석 작품은 조금 과했던 것 같아요."},
-        {id:1209,exhibitionId:12,userId:119,rating:5,comment:"판화라는 매체의 깊이를 새롭게 발견했어요. 꼭 방문해 보세요!"},
-        {id:1210,exhibitionId:12,userId:120,rating:4,comment:"에디션 출판물도 판매하고 있어서 소장하기 좋았습니다."},
-        {id:1301,exhibitionId:13,userId:91,rating:5,comment:"페스티벌 좋았어요! 갤러리 투어하는 재미가 있었어요."},
-        {id:1302,exhibitionId:13,userId:92,rating:5,comment:"다양한 스타일! 12개 갤러리 각각의 개성이 살아있었어요."},
-        {id:1303,exhibitionId:13,userId:93,rating:5,comment:"다양성이 좋아요. 한 번의 방문으로 다양한 작품을 볼 수 있어 값어치가 있었어요."},
-        {id:1304,exhibitionId:13,userId:94,rating:4,comment:"이대 앞 골목 자체가 예술 공간이 된 것 같았어요. 분위기가 정말 좋았습니다."},
-        {id:1305,exhibitionId:13,userId:95,rating:5,comment:"갤러리마다 분위기가 달라서 투어하는 재미가 있었어요. 이런 연합전시 최고!"},
-        {id:1306,exhibitionId:13,userId:96,rating:4,comment:"작은 인디 갤러리들도 작품 수준이 높아서 놀랐어요."},
-        {id:1307,exhibitionId:13,userId:97,rating:5,comment:"스탬프 랠리처럼 갤러리를 돌아다니는 게 재밌었어요. 어른들도 즐길 수 있는 이벤트!"},
-        {id:1308,exhibitionId:13,userId:98,rating:3,comment:"갤러리들이 멀리 떨어져 있어 동선이 힘들었지만 작품은 좋았어요."},
-        {id:1309,exhibitionId:13,userId:99,rating:4,comment:"각 갤러리 오너분들이 친절하게 설명해주셔서 더 좋았어요."},
-        {id:1310,exhibitionId:13,userId:100,rating:5,comment:"이대 앞에 이렇게 훌륭한 갤러리들이 많은 줄 몰랐어요. 앞으로 자주 올게요!"},
-        {id:1311,exhibitionId:13,userId:101,rating:4,comment:"마지막 갤러리의 설치작품이 정말 압도적이었습니다."},
-        {id:1401,exhibitionId:14,userId:71,rating:4,comment:"과정이 좋았어요. 완성된 벽화보다 제작 과정을 담은 사진들이 더 인상적이었어요."},
-        {id:1402,exhibitionId:14,userId:72,rating:5,comment:"의미 있었습니다. 도시 공공미술의 가능성을 보여주는 좋은 전시였어요."},
-        {id:1403,exhibitionId:14,userId:73,rating:4,comment:"취지가 좋네요! 예술이 갤러리를 벗어나 길거리로 나온다는 것이 의미 있었어요."},
-        {id:1404,exhibitionId:14,userId:74,rating:5,comment:"청계천이라는 공간과 잘 어울리는 전시였어요. 지역성을 잘 살렸습니다."},
-        {id:1405,exhibitionId:14,userId:75,rating:4,comment:"주민들과 함께 만든 벽화 프로젝트 이야기가 특히 감동적이었어요."},
-        {id:1406,exhibitionId:14,userId:76,rating:5,comment:"공공미술에 관심 있는 분들에게 꼭 추천하고 싶은 전시입니다."},
-        {id:1407,exhibitionId:14,userId:77,rating:3,comment:"전시 공간이 협소해서 작품들을 제대로 감상하기 어려웠어요."},
-        {id:1408,exhibitionId:14,userId:78,rating:4,comment:"각 벽화 작품의 기획 의도를 설명한 노트가 이해를 도와줬어요."},
-        {id:1409,exhibitionId:14,userId:79,rating:5,comment:"도시 재생과 예술의 만남. 이런 프로젝트가 더 많아졌으면 합니다."},
-        {id:1410,exhibitionId:14,userId:80,rating:4,comment:"실제 벽화 현장 투어도 연계해주면 더욱 좋을 것 같아요."},
-        {id:1501,exhibitionId:15,userId:51,rating:5,comment:"대전이 인상적! 과학고 학생들이 만든 설치미술이라니 정말 놀라웠어요."},
-        {id:1502,exhibitionId:15,userId:52,rating:4,comment:"융합이 멋있어요. 과학과 예술이 이렇게 자연스럽게 연결될 수 있다는 걸 느꼈어요."},
-        {id:1503,exhibitionId:15,userId:53,rating:5,comment:"신선했어요. 공대 학생들의 감성이 의외로 굉장히 풍부하더라고요."},
-        {id:1504,exhibitionId:15,userId:54,rating:5,comment:"물리 법칙을 시각화한 설치물들이 특히 흥미로웠어요. 교육적이기도 했습니다."},
-        {id:1505,exhibitionId:15,userId:55,rating:4,comment:"카이스트 특유의 이공계 감성과 예술이 만나는 독특한 전시였어요."},
-        {id:1506,exhibitionId:15,userId:56,rating:5,comment:"AI와 예술의 융합을 시도한 작품들이 미래지향적이었습니다."},
-        {id:1507,exhibitionId:15,userId:57,rating:4,comment:"대전까지 갈 만한 가치가 있는 전시였어요. 정말 독창적인 작품들이 많았습니다."},
-        {id:1508,exhibitionId:15,userId:58,rating:5,comment:"생체 모방 설계에서 영감받은 설치물이 특히 아름다웠어요."},
-        {id:1509,exhibitionId:15,userId:59,rating:4,comment:"학생들의 논문과 연계된 작품들이라 더욱 깊이가 있었습니다."},
-        {id:1510,exhibitionId:15,userId:60,rating:5,comment:"예술과 과학의 경계가 허물어지는 순간을 경험했어요. 꼭 보러 가세요!"},
-        {id:1511,exhibitionId:15,userId:61,rating:4,comment:"설명판이 꼼꼼히 작성되어 있어서 비전공자도 쉽게 이해할 수 있었어요."}
-    ];
+// ── COVER GRADIENTS ──
+const cvrs=[
+  'linear-gradient(135deg,#c9d6df,#e2ebf0)','linear-gradient(135deg,#d4b8e0,#b39ddb)',
+  'linear-gradient(135deg,#b2dfdb,#80cbc4)','linear-gradient(135deg,#ffe0b2,#ffcc80)',
+  'linear-gradient(135deg,#cfd8dc,#b0bec5)','linear-gradient(135deg,#f8bbd0,#f48fb1)',
+  'linear-gradient(135deg,#dcedc8,#aed581)','linear-gradient(135deg,#e8eaf6,#c5cae9)',
+  'linear-gradient(135deg,#fce4ec,#f8bbd0)','linear-gradient(135deg,#e0f2f1,#b2dfdb)',
+  'linear-gradient(135deg,#e3f2fd,#90caf9)','linear-gradient(135deg,#fff9c4,#fff176)',
+  'linear-gradient(135deg,#fbe9e7,#ffccbc)','linear-gradient(135deg,#f3e5f5,#ce93d8)',
+  'linear-gradient(135deg,#e8f5e9,#a5d6a7)'
+];
+const cvr = id => cvrs[(id-1)%cvrs.length];
 
-    // 전시 날짜를 2026년 3월 기준으로 설정
-    const dummyExhibitions = [
-        {id:1,title:"홍대 청년 미술 전시",type:"student",location:"홍대 앞 갤러리",lat:37.5492,lng:126.9241,startDate:"2026-03-10",endDate:"2026-03-25",description:"홍대 미술 동아리의 신진 작가들의 작품을 소개하는 전시입니다. 다채로운 매체와 독창적 시각으로 세상을 재해석합니다."},
-        {id:2,title:"국민대 시각디자인 졸업전시",type:"graduation",location:"국민대학교 미술관",lat:37.6157,lng:127.0818,startDate:"2026-03-15",endDate:"2026-03-28",description:"시각디자인학과 2026년 졸업전시입니다. 4년간의 연구와 실험을 담은 작품들을 만나보세요."},
-        {id:3,title:"이화여대 페미니즘 아트 전시",type:"student",location:"이대 학생 갤러리",lat:37.5514,lng:126.9464,startDate:"2026-03-12",endDate:"2026-04-02",description:"페미니즘 관점의 현대미술 전시. 다양한 목소리와 시각을 통해 사회적 메시지를 전달합니다."},
-        {id:4,title:"서울시립대 설치미술 전시",type:"student",location:"시립대 예술관",lat:37.5848,lng:127.0566,startDate:"2026-03-17",endDate:"2026-03-30",description:"설치미술의 경계를 넘나드는 실험적 전시. 관람객이 직접 참여하고 체험하는 인터랙티브 작품들."},
-        {id:5,title:"중앙대 사진전 '순간의 기억'",type:"student",location:"중앙대 갤러리",lat:37.6014,lng:127.1065,startDate:"2026-03-17",endDate:"2026-04-05",description:"젊은 사진작가들의 일상 속 순간 포착. 평범한 풍경 속 비범한 감동을 담은 사진들을 선보입니다."},
-        {id:6,title:"강남 신진 미술가 기획전",type:"student",location:"강남 문화전시관",lat:37.4979,lng:127.0276,startDate:"2026-03-20",endDate:"2026-04-08",description:"강남 지역의 신진 미술가 12명의 작품 전시. 다양한 장르와 스타일을 한 자리에서 만나세요."},
-        {id:7,title:"숙명여대 패션 디자인 졸업전",type:"graduation",location:"숙명여대 패션관",lat:37.5382,lng:126.9921,startDate:"2026-04-01",endDate:"2026-04-12",description:"패션 디자인 학과 졸업 작품 발표. 미래 패션 트렌드를 이끌 신진 디자이너들을 소개합니다."},
-        {id:8,title:"서강대 융합예술 전시",type:"student",location:"서강대 아트홀",lat:37.5506,lng:126.9357,startDate:"2026-03-14",endDate:"2026-03-29",description:"기술과 예술의 만남. 미디어아트, AR/VR, 인터랙티브 설치 등 멀티미디어 전시."},
-        {id:9,title:"덕성여대 회화과 졸업전시",type:"graduation",location:"덕성여대 미술관",lat:37.6041,lng:127.0298,startDate:"2026-03-22",endDate:"2026-04-09",description:"2026년 회화과 졸업생들의 작품전. 동양화에서 서양화까지, 다양한 회화 작품을 만나보세요."},
-        {id:10,title:"명지대 조소 전시",type:"student",location:"명지대 갤러리",lat:37.2467,lng:127.1762,startDate:"2026-03-18",endDate:"2026-04-04",description:"공간을 점유하는 조소 작품들의 향연. 다양한 재료와 형태로 표현된 입체 예술의 세계."},
-        {id:11,title:"동덕여대 버추얼 아트 전시",type:"student",location:"동덕여대 온라인 갤러리",lat:37.5629,lng:127.0451,startDate:"2026-03-15",endDate:"2026-04-06",description:"디지털 기반의 새로운 미술 표현. NFT, 제너러티브 아트, 디지털 드로잉 등 가상 예술의 최전선."},
-        {id:12,title:"성균관대 판화 그룹 전시",type:"student",location:"성균관대 예술관",lat:37.5963,lng:126.9944,startDate:"2026-03-25",endDate:"2026-04-07",description:"전통과 현대를 아우르는 판화 작품들. 목판, 동판, 실크스크린 등 다양한 기법을 선보입니다."},
-        {id:13,title:"이대 앞 갤러리 페스티벌",type:"student",location:"이화마을 갤러리",lat:37.5543,lng:126.9508,startDate:"2026-03-17",endDate:"2026-04-01",description:"이대 앞 상가 갤러리 12곳의 연합 전시. 골목마다 가득한 젊은 예술가들의 작품을 탐방하세요."},
-        {id:14,title:"청계천 벽화 프로젝트 전시",type:"student",location:"청계천 갤러리",lat:37.5677,lng:126.9954,startDate:"2026-03-13",endDate:"2026-03-28",description:"도시 벽화 프로젝트의 과정과 결과 전시. 공공미술로서 벽화가 가지는 의미를 돌아봅니다."},
-        {id:15,title:"카이스트 설치미술 대전",type:"student",location:"카이스트 E3 갤러리",lat:36.3643,lng:127.3650,startDate:"2026-03-20",endDate:"2026-04-11",description:"과학과 예술의 경계에서 태어난 설치미술. 공학도들이 만들어낸 독창적 예술 세계를 만나세요."}
-    ];
+// ── DUMMY DATA ──
+const dR=[
+  {id:101,exhibitionId:1,userId:901,rating:5,comment:"홍대 특유의 에너지가 넘치는 전시였어요. 신진 작가들의 실험적인 시도가 인상적이었습니다."},
+  {id:102,exhibitionId:1,userId:902,rating:4,comment:"흥미로운 시각과 표현 방식이 많았어요. 작가들의 열정이 느껴졌습니다."},
+  {id:103,exhibitionId:1,userId:903,rating:5,comment:"신진 작가들의 에너지와 열정이 작품 하나하나에 묻어났어요!"},
+  {id:104,exhibitionId:1,userId:904,rating:4,comment:"다양한 매체를 활용한 실험적 작품들이 눈에 띄었습니다."},
+  {id:105,exhibitionId:1,userId:905,rating:5,comment:"미술관이 아닌 갤러리에서 이 정도 수준을 기대 못 했는데 정말 놀랐어요."},
+  {id:201,exhibitionId:2,userId:801,rating:5,comment:"역량이 정말 뛰어나요! 졸업 작품인데 전문 디자이너 수준입니다."},
+  {id:202,exhibitionId:2,userId:802,rating:4,comment:"브랜딩 프로젝트들이 특히 완성도가 좋았어요."},
+  {id:203,exhibitionId:2,userId:803,rating:5,comment:"미래 디자이너들의 포트폴리오를 직접 볼 수 있어서 좋았어요."},
+  {id:301,exhibitionId:3,userId:701,rating:5,comment:"페미니즘을 예술로 풀어낸 방식이 신선했습니다."},
+  {id:302,exhibitionId:3,userId:702,rating:4,comment:"사회적 메시지가 작품에 잘 녹아있었어요."},
+  {id:401,exhibitionId:4,userId:601,rating:5,comment:"설치미술이 이렇게 인터랙티브할 수 있다는 걸 알게 됐어요."},
+  {id:402,exhibitionId:4,userId:602,rating:5,comment:"관람객이 직접 참여하는 설치물이 정말 신선했어요."},
+  {id:501,exhibitionId:5,userId:501,rating:5,comment:"일상의 순간들이 이렇게 예술이 될 수 있군요."},
+  {id:502,exhibitionId:5,userId:502,rating:4,comment:"사진이 글보다 더 많은 것을 말해준다는 걸 느꼈어요."},
+  {id:601,exhibitionId:6,userId:411,rating:4,comment:"강남 지역 신진 작가들의 다양한 스타일이 한눈에 보였습니다."},
+  {id:602,exhibitionId:6,userId:412,rating:5,comment:"12명의 작가들이 각기 다른 개성을 보여줘서 풍성한 전시였어요."},
+  {id:701,exhibitionId:7,userId:311,rating:5,comment:"패션과 예술의 경계를 허물었습니다."},
+  {id:702,exhibitionId:7,userId:312,rating:5,comment:"상업 브랜드와 비교해도 손색없는 수준이에요."},
+  {id:801,exhibitionId:8,userId:221,rating:4,comment:"기술과 예술의 경계가 이렇게 허물어질 수 있다는 것을 느꼈어요."},
+  {id:802,exhibitionId:8,userId:222,rating:5,comment:"AR 작품들이 특히 인상적이었어요."},
+  {id:901,exhibitionId:9,userId:171,rating:5,comment:"캔버스에서 작가의 온기가 느껴지는 전시였어요."},
+  {id:902,exhibitionId:9,userId:172,rating:4,comment:"파스텔 톤의 회화 작품들이 특히 마음에 들었습니다."},
+  {id:1001,exhibitionId:10,userId:141,rating:5,comment:"조소 작품들이 공간과 대화하는 느낌이었습니다."},
+  {id:1101,exhibitionId:11,userId:121,rating:5,comment:"디지털 아트가 이렇게 다양해질 수 있다는 걸 새삼 느꼈어요."},
+  {id:1201,exhibitionId:12,userId:111,rating:5,comment:"판화가 이렇게 현대적으로 재해석될 수 있다는 게 놀라웠어요."},
+  {id:1301,exhibitionId:13,userId:91,rating:5,comment:"갤러리 투어하는 재미가 있었어요."},
+  {id:1401,exhibitionId:14,userId:71,rating:4,comment:"공공미술의 가능성을 보여주는 좋은 전시였어요."},
+  {id:1501,exhibitionId:15,userId:51,rating:5,comment:"과학고 학생들이 만든 설치미술이라니 정말 놀라웠어요."},
+  {id:1502,exhibitionId:15,userId:52,rating:4,comment:"과학과 예술이 이렇게 자연스럽게 연결될 수 있다는 걸 느꼈어요."}
+];
+const dE=[
+  {id:1,title:"홍대 청년 미술 전시",type:"student",location:"홍대 앞 갤러리",lat:37.5492,lng:126.9241,startDate:"2026-03-10",endDate:"2026-03-25",description:"홍대 미술 동아리의 신진 작가들의 작품을 소개하는 전시입니다. 다채로운 매체와 독창적 시각으로 세상을 재해석합니다.",artist:"김예림 (Yerim Kim)",artistBio:"홍익대학교 회화과 재학 중인 작가로, 도시의 감정을 캔버스에 담는 작업을 이어오고 있습니다."},
+  {id:2,title:"국민대 시각디자인 졸업전시",type:"graduation",location:"국민대학교 미술관",lat:37.6157,lng:127.0818,startDate:"2026-03-15",endDate:"2026-03-28",description:"시각디자인학과 2026년 졸업전시입니다. 4년간의 연구와 실험을 담은 작품들을 만나보세요.",artist:"국민대 시각디자인학과 26학번",artistBio:"브랜딩, UX, 타이포그래피까지 다양한 분야의 졸업 작품들이 한 자리에 모입니다."},
+  {id:3,title:"이화여대 페미니즘 아트 전시",type:"student",location:"이대 학생 갤러리",lat:37.5514,lng:126.9464,startDate:"2026-03-12",endDate:"2026-04-02",description:"페미니즘 관점의 현대미술 전시. 다양한 목소리와 시각을 통해 사회적 메시지를 전달합니다.",artist:"이화 여성미술 연구회",artistBio:"이화여자대학교 여성미술 연구회 소속 작가 8명의 공동 기획전입니다."},
+  {id:4,title:"서울시립대 설치미술 전시",type:"student",location:"시립대 예술관",lat:37.5848,lng:127.0566,startDate:"2026-03-17",endDate:"2026-03-30",description:"설치미술의 경계를 넘나드는 실험적 전시. 관람객이 직접 참여하고 체험하는 인터랙티브 작품들.",artist:"박준혁 (Junhyeok Park)",artistBio:"공간과 빛을 매개로 관객과 소통하는 설치 작업을 연구하고 있습니다."},
+  {id:5,title:"중앙대 사진전 '순간의 기억'",type:"student",location:"중앙대 갤러리",lat:37.6014,lng:127.1065,startDate:"2026-03-17",endDate:"2026-04-05",description:"젊은 사진작가들의 일상 속 순간 포착. 평범한 풍경 속 비범한 감동을 담은 사진들을 선보입니다.",artist:"중앙대 사진학과 사진연구회",artistBio:"중앙대학교 사진학과 재학생 12명이 모인 사진 연구 그룹입니다."},
+  {id:6,title:"강남 신진 미술가 기획전",type:"student",location:"강남 문화전시관",lat:37.4979,lng:127.0276,startDate:"2026-03-20",endDate:"2026-04-08",description:"강남 지역의 신진 미술가 12명의 작품 전시. 다양한 장르와 스타일을 한 자리에서 만나세요.",artist:"강남 아트 콜렉티브",artistBio:"다양한 학교 출신의 신진 작가들이 모인 독립 기획 그룹입니다."},
+  {id:7,title:"숙명여대 패션 디자인 졸업전",type:"graduation",location:"숙명여대 패션관",lat:37.5382,lng:126.9921,startDate:"2026-04-01",endDate:"2026-04-12",description:"패션 디자인 학과 졸업 작품 발표. 미래 패션 트렌드를 이끌 신진 디자이너들을 소개합니다.",artist:"숙명여대 패션디자인학과 26학번",artistBio:"지속가능성과 전통의 재해석이라는 키워드로 작업한 졸업 컬렉션입니다."},
+  {id:8,title:"서강대 융합예술 전시",type:"student",location:"서강대 아트홀",lat:37.5506,lng:126.9357,startDate:"2026-03-14",endDate:"2026-03-29",description:"기술과 예술의 만남. 미디어아트, AR/VR, 인터랙티브 설치 등 멀티미디어 전시.",artist:"서강 미디어아트 랩",artistBio:"공학과 예술의 경계에서 새로운 감각을 탐구하는 학제간 연구 그룹입니다."},
+  {id:9,title:"덕성여대 회화과 졸업전시",type:"graduation",location:"덕성여대 미술관",lat:37.6041,lng:127.0298,startDate:"2026-03-22",endDate:"2026-04-09",description:"2026년 회화과 졸업생들의 작품전. 동양화에서 서양화까지, 다양한 회화 작품을 만나보세요.",artist:"덕성여대 회화과 26학번",artistBio:"한국화, 서양화, 판화 전공 졸업생 15명의 작품이 함께 전시됩니다."},
+  {id:10,title:"명지대 조소 전시",type:"student",location:"명지대 갤러리",lat:37.2467,lng:127.1762,startDate:"2026-03-18",endDate:"2026-04-04",description:"공간을 점유하는 조소 작품들의 향연. 다양한 재료와 형태로 표현된 입체 예술의 세계.",artist:"최서연 (Seoyeon Choi)",artistBio:"물성과 공간의 관계를 탐구하는 조각 작업을 통해 일상을 재해석합니다."},
+  {id:11,title:"동덕여대 버추얼 아트 전시",type:"student",location:"동덕여대 갤러리",lat:37.5629,lng:127.0451,startDate:"2026-03-15",endDate:"2026-04-06",description:"디지털 기반의 새로운 미술 표현. NFT, 제너러티브 아트, 디지털 드로잉 등 가상 예술의 최전선.",artist:"동덕 디지털아트 스튜디오",artistBio:"디지털 매체로 예술의 경계를 확장하는 실험적 작업 그룹입니다."},
+  {id:12,title:"성균관대 판화 그룹 전시",type:"student",location:"성균관대 예술관",lat:37.5963,lng:126.9944,startDate:"2026-03-25",endDate:"2026-04-07",description:"전통과 현대를 아우르는 판화 작품들. 목판, 동판, 실크스크린 등 다양한 기법을 선보입니다.",artist:"성균 판화 연구회",artistBio:"전통 판화 기법의 현대적 해석을 연구하는 성균관대학교 판화 연구 모임입니다."},
+  {id:13,title:"이대 앞 갤러리 페스티벌",type:"student",location:"이화마을 갤러리",lat:37.5543,lng:126.9508,startDate:"2026-03-17",endDate:"2026-04-01",description:"이대 앞 상가 갤러리 12곳의 연합 전시. 골목마다 가득한 젊은 예술가들의 작품을 탐방하세요.",artist:"이화마을 갤러리 연합",artistBio:"이화여대 인근 독립 갤러리 12곳이 함께 기획한 지역 예술 축제입니다."},
+  {id:14,title:"청계천 벽화 프로젝트 전시",type:"student",location:"청계천 갤러리",lat:37.5677,lng:126.9954,startDate:"2026-03-13",endDate:"2026-03-28",description:"도시 벽화 프로젝트의 과정과 결과 전시. 공공미술로서 벽화가 가지는 의미를 돌아봅니다.",artist:"청계천 아트 프로젝트 팀",artistBio:"도시 재생과 공공 예술을 연결하는 청계천 지역 기반 커뮤니티 아트 팀입니다."},
+  {id:15,title:"카이스트 설치미술 대전",type:"student",location:"카이스트 E3 갤러리",lat:36.3643,lng:127.3650,startDate:"2026-03-20",endDate:"2026-04-11",description:"과학과 예술의 경계에서 태어난 설치미술. 공학도들이 만들어낸 독창적 예술 세계를 만나세요.",artist:"KAIST 예술공학 연구소",artistBio:"카이스트 학생들이 과학적 원리를 예술 언어로 변환하는 실험적 설치물들을 선보입니다."}
+];
 
-    // 데이터 초기화 (버전 키로 강제 리셋)
-    if (!localStorage.getItem('arthere_v3')) {
-        exhibitions = dummyExhibitions;
-        ratings = dummyRatings;
-        localStorage.setItem('exhibitions', JSON.stringify(exhibitions));
-        localStorage.setItem('ratings', JSON.stringify(ratings));
-        localStorage.setItem('arthere_v3', '1');
+if(!localStorage.getItem('arth_v6')){
+  exs=dE; rats=dR;
+  localStorage.setItem('exs',JSON.stringify(exs));
+  localStorage.setItem('rats',JSON.stringify(rats));
+  localStorage.setItem('arth_v6','1');
+} else {
+  if(!exs.length){exs=dE;localStorage.setItem('exs',JSON.stringify(exs));}
+  if(!rats.length){rats=dR;localStorage.setItem('rats',JSON.stringify(rats));}
+}
+
+// ── HELPERS ──
+const avg = id => { const r=rats.filter(x=>x.exhibitionId===id); return r.length ? r.reduce((s,x)=>s+x.rating,0)/r.length : 0; };
+const avgS = id => { const a=avg(id); return a ? a.toFixed(1) : null; };
+const toStr = () => { const t=new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; };
+
+// ── AUTH ──
+function openAuth(t) {
+  document.getElementById('authOv').classList.add('on');
+  document.querySelectorAll('.atab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.afc').forEach(x=>x.classList.remove('on'));
+  document.querySelector(`.atab[data-t="${t}"]`).classList.add('on');
+  document.getElementById(t+'Form').classList.add('on');
+}
+function closeAuth() { document.getElementById('authOv').classList.remove('on'); }
+
+function demoLogin() {
+  cu={id:1,username:'방문자',email:'demo@arthere.kr',school:'서울대학교',major:'미술학과'};
+  localStorage.setItem('cu',JSON.stringify(cu));
+  closeAuth(); showPg('pgMap');
+}
+function login() {
+  const e=document.getElementById('lemail').value, p=document.getElementById('lpw').value;
+  const u=users.find(x=>x.email===e&&x.password===p);
+  if(u){cu=u;localStorage.setItem('cu',JSON.stringify(u));closeAuth();showPg('pgMap');}
+  else alert('이메일 또는 비밀번호가 잘못되었습니다.');
+}
+function signup() {
+  const n=document.getElementById('suname').value, e=document.getElementById('suemail').value,
+    p=document.getElementById('supw').value, s=document.getElementById('suschool').value,
+    m=document.getElementById('sumajor').value;
+  if(!n||!e||!p){alert('필수 항목을 입력해주세요.');return;}
+  if(users.find(u=>u.email===e)){alert('이미 존재하는 이메일입니다.');return;}
+  const nu={id:Date.now(),username:n,email:e,password:p,school:s||'미입력',major:m||'미입력'};
+  users.push(nu); localStorage.setItem('users',JSON.stringify(users));
+  cu=nu; localStorage.setItem('cu',JSON.stringify(nu)); closeAuth(); showPg('pgMap');
+}
+function logout() { cu=null; localStorage.removeItem('cu'); showPg('pgSplash'); }
+
+// ── PAGE NAV ──
+function showPg(name) {
+  if(name!=='pgSplash'&&name!=='pgDet') prevPg=name;
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById(name).classList.add('on');
+  document.querySelectorAll('.ni').forEach(i=>i.classList.remove('on'));
+  const ni=document.querySelector(`.ni[data-pg="${name}"]`); if(ni) ni.classList.add('on');
+  const showChrome = name !== 'pgSplash';
+  document.getElementById('hdr').classList.toggle('on', showChrome);
+  document.getElementById('bnav').classList.toggle('on', showChrome);
+  if(name==='pgMap') {
+    setTimeout(() => {
+      if(!map) initMap();
+      else { kakao.maps.load(() => map.relayout()); }
+    }, 100);
+  }
+  if(name==='pgCal') initCal();
+  if(name==='pgPop') initPop();
+  if(name==='pgMy') initMy();
+  const bs=document.getElementById('bsht'); if(bs) bs.classList.add('hide');
+  if(name!=='pgDet'&&detMM){detMM=null;}
+}
+
+// ── MAP ──
+function setFilter(f) {
+  curFilter=f;
+  ['all','student','graduation'].forEach(x=>
+    document.getElementById({all:'fa',student:'fs',graduation:'fg'}[x]).classList.toggle('on',x===f)
+  );
+  initMap();
+}
+
+function initMap(centerLat, centerLng) {
+  const container = document.getElementById('map');
+  if(!container) return;
+
+  kakao.maps.load(() => {
+    // 기존 마커 제거
+    markers.forEach(m => m.setMap(null)); markers = []; selMarkId = null;
+
+    const lat = centerLat || 37.5665, lng = centerLng || 126.9780;
+    const level = centerLat ? 4 : 6;
+
+    if(!map) {
+      map = new kakao.maps.Map(container, {
+        center: new kakao.maps.LatLng(lat, lng),
+        level: level
+      });
+      const zc = new kakao.maps.ZoomControl();
+      map.addControl(zc, kakao.maps.ControlPosition.BOTTOMRIGHT);
     } else {
-        if (exhibitions.length === 0) { exhibitions = dummyExhibitions; localStorage.setItem('exhibitions', JSON.stringify(exhibitions)); }
-        if (ratings.length === 0) { ratings = dummyRatings; localStorage.setItem('ratings', JSON.stringify(ratings)); }
+      map.setCenter(new kakao.maps.LatLng(lat, lng));
+      map.setLevel(level);
     }
 
-    function demoLogin() {
-        currentUser = { id: 1, username: '방문자', email: 'demo@arthere.kr', school: '서울대학교', major: '미술학과' };
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        showPage('mapPage');
-    }
+    // 컨테이너 크기 재계산 (display:none → flex 전환 후 필수)
+    map.relayout();
 
-    function showPage(name) {
-        if (name !== 'authPage' && name !== 'detailPage') previousPage = name;
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(name).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        const nav = document.querySelector(`[data-page="${name}"]`);
-        if (nav) nav.classList.add('active');
-        if (name === 'authPage') {
-            document.getElementById('header').classList.remove('visible');
-            document.getElementById('bottomNav').classList.remove('visible');
-        } else {
-            document.getElementById('header').classList.add('visible');
-            document.getElementById('bottomNav').classList.add('visible');
-        }
-        if (name === 'mapPage') setTimeout(initMap, 100);
-        if (name === 'calendarPage') initCalendar();
-        if (name === 'popularPage') populateRecommendations();
-        if (name === 'myPage') loadMyPage();
-        document.getElementById('bottomSheet').classList.add('hidden');
-    }
-
-    function login() {
-        const email = document.getElementById('loginEmail').value;
-        const pw = document.getElementById('loginPassword').value;
-        const user = users.find(u => u.email === email && u.password === pw);
-        if (user) { currentUser = user; localStorage.setItem('currentUser', JSON.stringify(user)); showPage('mapPage'); }
-        else alert('이메일 또는 비밀번호가 잘못되었습니다.');
-    }
-
-    function signup() {
-        const username = document.getElementById('signupUsername').value;
-        const email = document.getElementById('signupEmail').value;
-        const password = document.getElementById('signupPassword').value;
-        const school = document.getElementById('signupSchool').value;
-        const major = document.getElementById('signupMajor').value;
-        if (!username || !email || !password) { alert('필수 항목을 입력해주세요.'); return; }
-        if (users.find(u => u.email === email)) { alert('이미 존재하는 이메일입니다.'); return; }
-        const newUser = { id: Date.now(), username, email, password, school: school||'미입력', major: major||'미입력' };
-        users.push(newUser);
-        localStorage.setItem('users', JSON.stringify(users));
-        currentUser = newUser;
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-        showPage('mapPage');
-    }
-
-    function logout() { currentUser = null; localStorage.removeItem('currentUser'); showPage('authPage'); }
-
-    // MAP — OpenStreetMap 표준 타일 (한국어 지명 포함)
-    function setFilter(f) {
-        currentFilter = f;
-        document.querySelectorAll('.map-filter-btn').forEach(b => b.classList.remove('active-filter'));
-        ({ all: 'filterAll', student: 'filterStudent', graduation: 'filterGrad' });
-        document.getElementById({ all: 'filterAll', student: 'filterStudent', graduation: 'filterGrad' }[f]).classList.add('active-filter');
-        initMap();
-    }
-
-    function initMap() {
-        const mapDiv = document.getElementById('map');
-        if (!mapDiv) return;
-        if (map) { map.remove(); map = null; }
-        map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 11);
-        // OpenStreetMap 기본 타일 — 서울/한국 지역에서 한국어 지명 표기
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(map);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-        markers.forEach(m => m.remove());
-        markers = [];
-        const filtered = currentFilter === 'all' ? exhibitions : exhibitions.filter(e => e.type === currentFilter);
-        filtered.forEach(ex => {
-            const isStudent = ex.type === 'student';
-            const color = isStudent ? '#58355e' : '#3d2242';
-            const bgOuter = isStudent ? '#c4d6b0' : '#e8d5eb';
-            const emoji = isStudent ? '🎨' : '🎓';
-            const marker = L.marker([ex.lat, ex.lng], {
-                icon: L.divIcon({
-                    html: `<div style="background:${color};color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid ${bgOuter};box-shadow:0 3px 10px rgba(88,53,94,0.35);">${emoji}</div>`,
-                    iconSize: [36, 36],
-                    iconAnchor: [18, 18],
-                    className: ''
-                })
-            }).addTo(map);
-            marker.on('click', () => showNearby(ex.lat, ex.lng));
-            markers.push(marker);
-        });
-    }
-
-    function showNearby(lat, lng) {
-        const nearby = exhibitions.filter(ex => {
-            if (currentFilter !== 'all' && ex.type !== currentFilter) return false;
-            return Math.sqrt(Math.pow(ex.lat - lat, 2) + Math.pow(ex.lng - lng, 2)) < 0.05;
-        });
-        const sheet = document.getElementById('sheetExhibitions');
-        sheet.innerHTML = '';
-        document.getElementById('bsCount').textContent = `${nearby.length}개`;
-        nearby.forEach(ex => {
-            const exR = ratings.filter(r => r.exhibitionId === ex.id);
-            const avg = exR.length > 0 ? (exR.reduce((s,r)=>s+r.rating,0)/exR.length).toFixed(1) : null;
-            const card = document.createElement('div'); card.className = 'ex-card slide-up';
-            card.innerHTML = `<div class="ex-card-icon ${ex.type}"><span>${ex.type==='student'?'🎨':'🎓'}</span></div><div class="ex-card-body"><span class="ex-card-badge ${ex.type==='student'?'badge-student':'badge-graduation'}">${ex.type==='student'?'대학생 기획':'졸업전시'}</span><div class="ex-card-title">${ex.title}</div><div class="ex-card-meta">📍 ${ex.location}</div><div class="ex-card-meta">📅 ${ex.startDate} ~ ${ex.endDate}</div>${avg?`<div class="ex-card-rating">⭐ ${avg} (${exR.length}명)</div>`:''}</div>`;
-            card.addEventListener('click', () => showDetail(ex.id));
-            sheet.appendChild(card);
-        });
-        document.getElementById('bottomSheet').classList.remove('hidden');
-    }
-
-    function showDetail(id) {
-        const ex = exhibitions.find(e => e.id === id);
-        if (!ex) return;
-        currentExhibitionId = ex.id;
-        const isStudent = ex.type === 'student';
-        document.getElementById('detailHero').style.background = isStudent
-            ? 'linear-gradient(135deg, #3a5528 0%, #6a8f52 100%)'
-            : 'linear-gradient(135deg, #2e1a33 0%, #58355e 100%)';
-        document.getElementById('detailBadge').textContent = isStudent ? '대학생 기획 전시' : '졸업 전시';
-        document.getElementById('detailBadge').className = `detail-badge ${ex.type}`;
-        document.getElementById('detailTitle').textContent = ex.title;
-        document.getElementById('detailLocation').textContent = ex.location;
-        document.getElementById('detailDate').textContent = `${ex.startDate} ~ ${ex.endDate}`;
-        document.getElementById('detailDescription').textContent = ex.description;
-        const ratingInput = document.getElementById('ratingInput');
-        ratingInput.innerHTML = '';
-        for (let i = 1; i <= 5; i++) {
-            const s = document.createElement('span'); s.className = 'star'; s.textContent = '★'; s.dataset.rating = i;
-            s.addEventListener('click', () => document.querySelectorAll('#ratingInput .star').forEach((st, idx) => st.classList.toggle('filled', idx < i)));
-            ratingInput.appendChild(s);
-        }
-        loadComments(ex.id);
-        showPage('detailPage');
-    }
-
-    function loadComments(id) {
-        const exR = ratings.filter(r => r.exhibitionId === id);
-        document.getElementById('ratingCount').textContent = exR.length;
-        const list = document.getElementById('commentsList'); list.innerHTML = '';
-        if (exR.length === 0) { list.innerHTML = '<div class="empty-state"><div class="big">✍️</div>첫 리뷰를 남겨주세요!</div>'; return; }
-        exR.forEach(r => {
-            const el = document.createElement('div'); el.className = 'comment-item';
-            el.innerHTML = `<div class="comment-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} ${r.rating}점</div><div class="comment-text">${r.comment}</div>`;
-            list.appendChild(el);
-        });
-    }
-
-    // CALENDAR — 날짜 클릭 시 해당 날의 전시 표시, 점(dot)으로 이벤트 표시
-    function initCalendar() {
-        const firstDay = new Date(currentCalendarYear, currentCalendarMonth, 1).getDay();
-        const daysInMonth = new Date(currentCalendarYear, currentCalendarMonth + 1, 0).getDate();
-        document.getElementById('calendarMonth').textContent = `${currentCalendarYear}년 ${currentCalendarMonth + 1}월`;
-        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
-        ['일','월','화','수','목','금','토'].forEach(d => {
-            const el = document.createElement('div'); el.className = 'cal-day-header'; el.textContent = d; grid.appendChild(el);
-        });
-        for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
-        const today = new Date();
-        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const el = document.createElement('div'); el.className = 'cal-day';
-            const dateStr = `${currentCalendarYear}-${String(currentCalendarMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-            const dayExhibitions = exhibitions.filter(ex => dateStr >= ex.startDate && dateStr <= ex.endDate);
-
-            const numEl = document.createElement('span'); numEl.textContent = day; el.appendChild(numEl);
-
-            if (dayExhibitions.length > 0) {
-                el.classList.add('has-event');
-                const dots = document.createElement('div'); dots.className = 'cal-dots';
-                const maxDots = Math.min(dayExhibitions.length, 3);
-                for (let d = 0; d < maxDots; d++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'cal-dot' + (dayExhibitions[d].type === 'graduation' ? ' grad' : '');
-                    dots.appendChild(dot);
-                }
-                el.appendChild(dots);
-            }
-            if (dateStr === todayStr) el.classList.add('today');
-            if (dateStr === selectedCalDate) el.classList.add('selected');
-
-            el.addEventListener('click', () => {
-                selectedCalDate = dateStr;
-                document.querySelectorAll('.cal-day.selected').forEach(d => d.classList.remove('selected'));
-                el.classList.add('selected');
-                showCalendarEvents(dateStr);
-            });
-            grid.appendChild(el);
-        }
-        const initDate = selectedCalDate || todayStr;
-        showCalendarEvents(initDate);
-    }
-
-    function showCalendarEvents(dateStr) {
-        const [year, month, day] = dateStr.split('-');
-        const dayEx = exhibitions.filter(ex => dateStr >= ex.startDate && dateStr <= ex.endDate);
-        const today = new Date();
-        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-        const isToday = dateStr === todayStr;
-        document.getElementById('calEventsTitle').textContent =
-            `${parseInt(month)}월 ${parseInt(day)}일${isToday ? ' (오늘)' : ''} · 진행 중인 전시 ${dayEx.length}개`;
-        const list = document.getElementById('calendarEventsList'); list.innerHTML = '';
-        if (dayEx.length === 0) {
-            list.innerHTML = '<div class="empty-state"><div class="big">📅</div>이 날짜에 예정된 전시가 없습니다.</div>';
-            return;
-        }
-        dayEx.forEach(ex => {
-            const exR = ratings.filter(r => r.exhibitionId === ex.id);
-            const avg = exR.length > 0 ? (exR.reduce((s,r)=>s+r.rating,0)/exR.length).toFixed(1) : null;
-            const card = document.createElement('div'); card.className = 'ex-card slide-up';
-            card.innerHTML = `<div class="ex-card-icon ${ex.type}"><span>${ex.type==='student'?'🎨':'🎓'}</span></div><div class="ex-card-body"><span class="ex-card-badge ${ex.type==='student'?'badge-student':'badge-graduation'}">${ex.type==='student'?'대학생 기획':'졸업전시'}</span><div class="ex-card-title">${ex.title}</div><div class="ex-card-meta">📍 ${ex.location}</div><div class="ex-card-meta">📅 ${ex.startDate} ~ ${ex.endDate}</div>${avg?`<div class="ex-card-rating">⭐ ${avg} (${exR.length}명)</div>`:''}</div>`;
-            card.addEventListener('click', () => showDetail(ex.id));
-            list.appendChild(card);
-        });
-    }
-
-    function populateRecommendations() {
-        const scored = exhibitions.map(ex => {
-            const exR = ratings.filter(r => r.exhibitionId === ex.id);
-            const avg = exR.length > 0 ? exR.reduce((s,r)=>s+r.rating,0)/exR.length : 0;
-            return { ...ex, avg, count: exR.length };
-        }).sort((a,b) => b.avg - a.avg);
-        const list = document.getElementById('popularList'); list.innerHTML = '';
-        scored.slice(0,12).forEach((ex, idx) => {
-            const card = document.createElement('div'); card.className = 'pop-card slide-up';
-            card.innerHTML = `<div class="pop-rank ${idx < 3 ? 'top' : ''}">${idx+1}</div><div class="pop-body"><span class="ex-card-badge ${ex.type==='student'?'badge-student':'badge-graduation'}">${ex.type==='student'?'대학생 기획':'졸업전시'}</span><div class="pop-title">${ex.title}</div><div class="pop-meta">📍 ${ex.location}</div><div class="pop-rating">⭐ ${ex.avg.toFixed(1)} · ${ex.count}명 평가</div></div>`;
-            card.addEventListener('click', () => showDetail(ex.id));
-            list.appendChild(card);
-        });
-    }
-
-    function loadMyPage() {
-        if (!currentUser) { showPage('authPage'); return; }
-        document.getElementById('profileName').textContent = currentUser.username;
-        document.getElementById('profileSchool').textContent = `${currentUser.school} · ${currentUser.major}`;
-        document.getElementById('profileAvatar').textContent = currentUser.username[0].toUpperCase();
-        const myR = ratings.filter(r => r.userId === currentUser.id);
-        const list = document.getElementById('myCommentsList'); list.innerHTML = '';
-        if (myR.length === 0) { list.innerHTML = '<div class="empty-state"><div class="big">✍️</div>아직 남긴 평가가 없습니다.</div>'; return; }
-        myR.forEach(c => {
-            const ex = exhibitions.find(e => e.id === c.exhibitionId); if (!ex) return;
-            const card = document.createElement('div'); card.className = 'comment-item';
-            card.innerHTML = `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${ex.title}</div><div class="comment-stars">${'★'.repeat(c.rating)} ${c.rating}점</div><div class="comment-text">"${c.comment}"</div>`;
-            list.appendChild(card);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        if (currentUser) showPage('mapPage');
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.addEventListener('click', e => {
-                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.auth-form-content').forEach(f => f.classList.remove('active'));
-                e.target.classList.add('active');
-                document.getElementById(`${e.target.dataset.tab}Form`).classList.add('active');
-            });
-        });
-        document.getElementById('loginBtn').addEventListener('click', login);
-        document.getElementById('signupBtn').addEventListener('click', signup);
-        document.getElementById('logoutBtn').addEventListener('click', logout);
-        document.getElementById('backBtn').addEventListener('click', () => showPage(previousPage));
-        document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => showPage(item.dataset.page)));
-        document.getElementById('headerAddBtn').addEventListener('click', () => {
-            if (currentUser) document.getElementById('addExhibitionModal').classList.add('active');
-            else alert('로그인 후 전시를 등록할 수 있습니다.');
-        });
-        document.getElementById('headerMyBtn').addEventListener('click', () => { if (currentUser) showPage('myPage'); else alert('로그인해주세요.'); });
-        document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('addExhibitionModal').classList.remove('active'));
-        document.getElementById('addExhibitionModal').addEventListener('click', e => { if (e.target.id === 'addExhibitionModal') e.target.classList.remove('active'); });
-        document.getElementById('addExhibitionForm').addEventListener('submit', e => {
-            e.preventDefault();
-            const newEx = {
-                id: exhibitions.length + 1,
-                title: document.getElementById('exhibitionTitle').value,
-                type: document.getElementById('exhibitionType').value,
-                location: document.getElementById('exhibitionLocation').value,
-                lat: parseFloat(document.getElementById('exhibitionLat').value),
-                lng: parseFloat(document.getElementById('exhibitionLng').value),
-                startDate: document.getElementById('exhibitionStartDate').value,
-                endDate: document.getElementById('exhibitionEndDate').value,
-                description: document.getElementById('exhibitionDescription').value
-            };
-            exhibitions.push(newEx);
-            localStorage.setItem('exhibitions', JSON.stringify(exhibitions));
-            document.getElementById('addExhibitionForm').reset();
-            document.getElementById('addExhibitionModal').classList.remove('active');
-            alert('전시가 등록되었습니다!');
-            initMap();
-        });
-        document.getElementById('prevMonthBtn').addEventListener('click', () => { currentCalendarMonth--; if (currentCalendarMonth < 0) { currentCalendarMonth = 11; currentCalendarYear--; } selectedCalDate = null; initCalendar(); });
-        document.getElementById('nextMonthBtn').addEventListener('click', () => { currentCalendarMonth++; if (currentCalendarMonth > 11) { currentCalendarMonth = 0; currentCalendarYear++; } selectedCalDate = null; initCalendar(); });
-        document.getElementById('submitRatingBtn').addEventListener('click', () => {
-            if (!currentUser) { alert('로그인 후 평가할 수 있습니다.'); return; }
-            const rating = document.querySelectorAll('#ratingInput .star.filled').length;
-            const comment = document.getElementById('commentInput').value;
-            if (rating === 0) { alert('별점을 선택해주세요.'); return; }
-            ratings.push({ id: Date.now(), exhibitionId: currentExhibitionId, userId: currentUser.id, rating, comment: comment || '좋은 전시였습니다.' });
-            localStorage.setItem('ratings', JSON.stringify(ratings));
-            document.getElementById('commentInput').value = '';
-            document.querySelectorAll('#ratingInput .star').forEach(s => s.classList.remove('filled'));
-            loadComments(currentExhibitionId);
-        });
-        let touchStartY = 0;
-        const bs = document.getElementById('bottomSheet');
-        bs.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; });
-        bs.addEventListener('touchend', e => { if (e.changedTouches[0].clientY - touchStartY > 60) bs.classList.add('hidden'); });
+    const filtered = curFilter==='all' ? exs : exs.filter(e=>e.type===curFilter);
+    filtered.forEach(ex => {
+      const lbl = ex.title.length>10 ? ex.title.slice(0,10)+'…' : ex.title;
+      const isS = ex.type==='student';
+      const content = `<div class="kakao-marker ${isS?'s':'g'}" id="ml-${ex.id}">${lbl}</div>`;
+      const overlay = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(ex.lat, ex.lng),
+        content: content,
+        yAnchor: 1.3
+      });
+      overlay.setMap(map);
+      setTimeout(() => {
+        const el = document.getElementById(`ml-${ex.id}`);
+        if(el) el.addEventListener('click', () => selMark(ex.id));
+      }, 150);
+      overlay._exId = ex.id;
+      markers.push(overlay);
     });
+
+    if(centerLat) addMyLocMarker(centerLat, centerLng);
+  });
+}
+
+function addMyLocMarker(lat, lng) {
+  if(myLocM) myLocM.setMap(null);
+  const content = `<div style="width:18px;height:18px;background:#6d4fc2;border-radius:50%;border:3px solid white;box-shadow:0 0 0 5px rgba(109,79,194,.25)"></div>`;
+  myLocM = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(lat, lng),
+    content: content,
+    yAnchor: 0.5
+  });
+  myLocM.setMap(map);
+}
+
+// ① Location-first start
+function startWithLocation() {
+  showPg('pgMap');
+  kakao.maps.load(() => {
+    if(!navigator.geolocation) { initMap(); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => initMap(pos.coords.latitude, pos.coords.longitude),
+      () => initMap()
+    );
+  });
+}
+
+function goToMyLoc() {
+  if(!navigator.geolocation){alert('위치 서비스를 지원하지 않습니다.');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude:lat, longitude:lng} = pos.coords;
+    kakao.maps.load(() => {
+      if(!map) { initMap(lat, lng); return; }
+      map.setCenter(new kakao.maps.LatLng(lat, lng));
+      map.setLevel(4);
+      map.relayout();
+      addMyLocMarker(lat, lng);
+    });
+  }, ()=>alert('위치 권한을 허용해주세요.'));
+}
+
+// ④ Selected marker — LARGE hero card
+function selMark(id) {
+  selMarkId = id;
+  // reset all markers
+  markers.forEach(m => {
+    const el = document.getElementById(`ml-${m._exId}`);
+    if(el) el.classList.remove('sel');
+  });
+  const selEl = document.getElementById(`ml-${id}`);
+  if(selEl) selEl.classList.add('sel');
+  const sel=exs.find(e=>e.id===id); if(!sel)return;
+  const nearby=exs.filter(e=>e.id!==id&&(curFilter==='all'||e.type===curFilter))
+    .map(e=>({...e,d:Math.hypot(e.lat-sel.lat,e.lng-sel.lng)}))
+    .filter(e=>e.d<0.15).sort((a,b)=>a.d-b.d).slice(0,3);
+  const body=document.getElementById('bshBody'); body.innerHTML='';
+  const a=avgS(id), cnt=rats.filter(r=>r.exhibitionId===id).length;
+  const isS=sel.type==='student';
+  // HERO CARD
+  const hero=document.createElement('div'); hero.className='bsh-hero su';
+  hero.innerHTML=`
+    <div class="bsh-hero-img" style="background:${cvr(id)}">
+      <span style="font-size:64px;position:relative;z-index:1">${isS?'🎨':'🎓'}</span>
+      <div class="bsh-hero-img-overlay"></div>
+    </div>
+    <div class="bsh-hero-body">
+      <div class="bsh-hero-tag">${isS?'대학생 기획':'졸업전시'} · 선택된 전시</div>
+      <div class="bsh-hero-title">${sel.title}</div>
+      <div class="bsh-hero-meta">
+        <div class="bsh-hero-chip">📍 ${sel.location}</div>
+        <div class="bsh-hero-chip">📅 ${sel.startDate} ~ ${sel.endDate}</div>
+        ${a?`<div class="bsh-hero-rating">♥ ${a} <span style="opacity:.6;font-weight:400">(${cnt}명)</span></div>`:''}
+      </div>
+    </div>`;
+  hero.onclick=()=>showDetail(id); body.appendChild(hero);
+  // NEARBY
+  if(nearby.length){
+    const lbl=document.createElement('div'); lbl.className='bsh-nearby-hdr'; lbl.textContent='근처 전시'; body.appendChild(lbl);
+    nearby.forEach(ex=>{
+      const a2=avgS(ex.id), c2=rats.filter(r=>r.exhibitionId===ex.id).length, isS2=ex.type==='student';
+      const card=document.createElement('div'); card.className='exc su';
+      card.innerHTML=`<div class="exc-ph ${isS2?'s':'g'}">${isS2?'🎨':'🎓'}</div>
+        <div class="exc-bd">
+          <span class="exc-badge ${isS2?'s':'g'}">${isS2?'대학생 기획':'졸업전시'}</span>
+          <div class="exc-title">${ex.title}</div>
+          <div class="exc-loc">📍 ${ex.location}</div>
+          ${a2?`<div class="exc-rat">♥ ${a2} (${c2}명)</div>`:''}
+        </div>`;
+      card.onclick=()=>showDetail(ex.id); body.appendChild(card);
+    });
+  }
+  document.getElementById('bsht').classList.remove('hide');
+}
+
+// ── DETAIL ──
+function showDetail(id) {
+  const ex=exs.find(e=>e.id===id); if(!ex)return;
+  curExId=ex.id;
+  document.getElementById('detPh').style.background=cvr(id);
+  document.getElementById('detPh').innerHTML='';
+  document.getElementById('detTitle').textContent=ex.title;
+  const ds=ex.startDate.replace(/-/g,'.'), de=ex.endDate.replace(/-/g,'.');
+  document.getElementById('detDates').innerHTML=`📅 ${ds} — ${de} &nbsp; 📍 ${ex.location}`;
+  document.getElementById('detDate').textContent=`${ds} — ${de}`;
+  document.getElementById('detVenue').textContent=ex.location;
+  document.getElementById('detDesc').textContent=ex.description;
+  const hasA=ex.artist&&ex.artist.length;
+  document.getElementById('detArtSec').style.display=hasA?'':'none';
+  if(hasA){
+    document.getElementById('detArtAv').textContent=ex.artist[0];
+    document.getElementById('detArtName').textContent=ex.artist;
+    document.getElementById('detArtBio').textContent=ex.artistBio||'';
+  }
+  document.getElementById('detAddr').textContent=ex.location;
+  const mm=document.getElementById('detMmap'); mm.innerHTML='';
+  if(detMM){detMM=null;}
+  showPg('pgDet');
+  setTimeout(()=>{
+    kakao.maps.load(() => {
+      const mmContainer = document.getElementById('detMmap');
+      mmContainer.innerHTML = '';
+      detMM = new kakao.maps.Map(mmContainer, {
+        center: new kakao.maps.LatLng(ex.lat, ex.lng),
+        level: 4,
+        draggable: false,
+        scrollwheel: false,
+        disableDoubleClick: true
+      });
+      detMM.relayout();
+      const markerContent = `<div style="width:14px;height:14px;background:#6d4fc2;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)"></div>`;
+      new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(ex.lat, ex.lng),
+        content: markerContent,
+        yAnchor: 0.5
+      }).setMap(detMM);
+    });
+  }, 300);
+  renderRat(); loadRevs(id);
+}
+function renderRat() {
+  const box=document.getElementById('ratBox'); box.innerHTML='';
+  if(!cu){
+    box.innerHTML=`<div class="lp"><p>마음을 남기려면 로그인이 필요해요</p><button onclick="openAuth('login')">로그인 / 회원가입</button></div>`;
+    return;
+  }
+  const ta=document.createElement('textarea'); ta.className='rat-ta'; ta.id='rCmt'; ta.placeholder='이 전시에서 느낀 점을 자유롭게 남겨주세요 ✨';
+  const btn=document.createElement('button'); btn.className='btn-sub'; btn.textContent='내 마음 남기기'; btn.onclick=subRat;
+  box.appendChild(ta); box.appendChild(btn);
+}
+function subRat() {
+  const c=document.getElementById('rCmt').value.trim();
+  if(!c){alert('한 줄이라도 남겨주세요 :)');return;}
+  rats.push({id:Date.now(),exhibitionId:curExId,userId:cu.id,rating:0,comment:c});
+  localStorage.setItem('rats',JSON.stringify(rats));
+  document.getElementById('rCmt').value='';
+  loadRevs(curExId);
+}
+function loadRevs(id) {
+  const r=rats.filter(x=>x.exhibitionId===id);
+  document.getElementById('revCnt').textContent=r.length;
+  const list=document.getElementById('revList'); list.innerHTML='';
+  if(!r.length){list.innerHTML='<div class="empty"><div class="empty-ico">✍️</div>첫 번째로 마음을 남겨보세요!</div>';return;}
+  r.forEach((x,i)=>{
+    const el=document.createElement('div'); el.className='rev-item';
+    const timeAgo = i===0 ? '방금 전' : `${i+1}번째 방문자`;
+    el.innerHTML=`<div class="rev-who">💬 ${timeAgo}</div><div class="rev-t">${x.comment}</div>`;
+    list.appendChild(el);
+  });
+}
+
+// ── CALENDAR ──
+function initCal() {
+  const fd=new Date(calY,calM,1).getDay(), dim=new Date(calY,calM+1,0).getDate();
+  document.getElementById('calMlbl').textContent=`${calY}년 ${calM+1}월`;
+  document.getElementById('calSub').textContent=`${calY}년 ${calM+1}월 · 당신의 예술적 여정을 기록하세요`;
+  const grid=document.getElementById('calGrid'); grid.innerHTML='';
+  ['일','월','화','수','목','금','토'].forEach(d=>{const el=document.createElement('div');el.className='cal-dh';el.textContent=d;grid.appendChild(el);});
+  for(let i=0;i<fd;i++) grid.appendChild(document.createElement('div'));
+  const ts=toStr();
+  for(let day=1;day<=dim;day++){
+    const el=document.createElement('div'); el.className='cal-d';
+    const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const devs=exs.filter(e=>ds>=e.startDate&&ds<=e.endDate);
+    const num=document.createElement('span'); num.textContent=day; el.appendChild(num);
+    if(devs.length){
+      el.classList.add('ev');
+      const dots=document.createElement('div'); dots.className='cal-dots';
+      devs.slice(0,3).forEach(e=>{const d=document.createElement('div');d.className='cal-dot'+(e.type==='graduation'?' gr':'');dots.appendChild(d);});
+      el.appendChild(dots);
+    }
+    if(ds===ts) el.classList.add('td');
+    if(ds===selCal) el.classList.add('sl');
+    el.onclick=()=>{selCal=ds;document.querySelectorAll('.cal-d.sl').forEach(d=>d.classList.remove('sl'));el.classList.add('sl');showCalEvs(ds);};
+    grid.appendChild(el);
+  }
+  showCalEvs(selCal||ts);
+}
+function showCalEvs(ds) {
+  const [,m,d]=ds.split('-'), devs=exs.filter(e=>ds>=e.startDate&&ds<=e.endDate), ts=toStr();
+  document.getElementById('calDtTitle').textContent=`${parseInt(m)}월 ${parseInt(d)}일${ds===ts?' (오늘)':''} 전시`;
+  const badge=document.getElementById('calBadge');
+  if(devs.length){badge.textContent=`${devs.length}개의 전시`;badge.style.display='inline-block';}
+  else badge.style.display='none';
+  const list=document.getElementById('calList'); list.innerHTML='';
+  if(!devs.length){list.innerHTML='<div class="empty"><div class="empty-ico">📅</div>이 날짜에 예정된 전시가 없습니다.</div>';return;}
+  devs.forEach(ex=>{
+    const a=avgS(ex.id), cnt=rats.filter(r=>r.exhibitionId===ex.id).length, isS=ex.type==='student';
+    const card=document.createElement('div'); card.className='cal-exc su';
+    card.innerHTML=`<div class="cal-exc-ph ${isS?'s':'g'}">${isS?'🎨':'🎓'}</div>
+      <div class="cal-exc-bd">
+        <div class="cal-exc-title">${ex.title}</div>
+        <div class="cal-exc-meta">📍 ${ex.location} · ${ex.startDate} ~ ${ex.endDate}</div>
+        ${a?`<div class="cal-exc-rat"><span class="si">★</span><span class="rv">${a}</span><span class="rl">(${cnt}명)</span></div>`:''}
+      </div>`;
+    card.onclick=()=>showDetail(ex.id); list.appendChild(card);
+  });
+}
+
+// ── DISCOVER (Popular) ──
+let discCat = 'all';
+
+function catTypeFilter(ex, cat) {
+  if(cat==='all') return true;
+  if(cat==='student') return ex.type==='student';
+  if(cat==='graduation') return ex.type==='graduation';
+  if(cat==='photo') return ex.title.includes('사진')||ex.description.includes('사진');
+  if(cat==='install') return ex.title.includes('설치')||ex.description.includes('미디어')||ex.description.includes('융합')||ex.description.includes('디지털');
+  return true;
+}
+
+function initPop() {
+  const sc = exs.map(e=>{
+    const r=rats.filter(x=>x.exhibitionId===e.id);
+    return {...e, avg:r.length?r.reduce((s,x)=>s+x.rating,0)/r.length:0, cnt:r.length};
+  }).sort((a,b)=>b.avg-a.avg);
+
+  const hero = sc[0];
+  const heroWrap = document.getElementById('discHero');
+  if(hero && heroWrap) {
+    heroWrap.innerHTML = `
+      <div class="disc-hero" onclick="showDetail(${hero.id})">
+        <div class="disc-hero-img" style="background:${cvr(hero.id)}">
+          <span style="font-size:72px;position:relative;z-index:1">${hero.type==='student'?'🎨':'🎓'}</span>
+          <div class="disc-hero-img-ov"></div>
+        </div>
+        <div class="disc-hero-featured">WEEKLY FEATURED</div>
+        <div class="disc-hero-body">
+          <div class="disc-hero-title">${hero.title}</div>
+          <div class="disc-hero-meta">${hero.location} | ${hero.startDate.replace(/-/g,'.')} - ${hero.endDate.replace(/-/g,'.')}</div>
+        </div>
+      </div>`;
+  }
+
+  renderDiscCards(sc);
+
+  document.querySelectorAll('.dcat').forEach(btn => {
+    btn.onclick = () => {
+      discCat = btn.dataset.cat;
+      document.querySelectorAll('.dcat').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      const filtered = discCat==='all' ? sc : sc.filter(e=>catTypeFilter(e,discCat));
+      renderDiscCards(filtered);
+    };
+  });
+}
+
+function renderDiscCards(list) {
+  const container = document.getElementById('discMatchList');
+  if(!container) return;
+  container.innerHTML = '';
+  const matchScores = [98,95,92,90,88,85,83,80,78,75,72,70];
+  const trendIdx = [2,5];
+  list.slice(0,12).forEach((ex,i) => {
+    const isS = ex.type==='student';
+    const catLabel = ex.title.includes('사진') ? 'PHOTOGRAPHY'
+      : ex.title.includes('설치') ? 'INSTALLATION'
+      : ex.title.includes('패션') ? 'FASHION'
+      : ex.title.includes('회화') ? 'PAINTING'
+      : ex.title.includes('판화') ? 'PRINTMAKING'
+      : (ex.title.includes('디지털')||ex.title.includes('버추얼')) ? 'NEW MEDIA'
+      : ex.title.includes('조소') ? 'SCULPTURE'
+      : ex.title.includes('디자인') ? 'DESIGN'
+      : isS ? 'GROUP EXHIBITION' : 'GRADUATION SHOW';
+    const badge = trendIdx.includes(i)
+      ? `<div class="disc-card-badge trend">🔥 Trending Now</div>`
+      : `<div class="disc-card-badge match">✦ ${matchScores[i]||70}% Match</div>`;
+    const card = document.createElement('div'); card.className = 'disc-card su';
+    card.innerHTML = `
+      <div class="disc-card-img" style="background:${cvr(ex.id)}">
+        <span style="font-size:64px;position:relative;z-index:1">${isS?'🎨':'🎓'}</span>
+        ${badge}
+      </div>
+      <div class="disc-card-body">
+        <div class="disc-card-cat">${catLabel}</div>
+        <div class="disc-card-title">${ex.title}</div>
+        <div class="disc-card-loc">📍 ${ex.location}</div>
+        <div class="disc-card-date">${ex.startDate.replace(/-/g,'.')} - ${ex.endDate.replace(/-/g,'.')}</div>
+      </div>`;
+    card.onclick = ()=>showDetail(ex.id);
+    container.appendChild(card);
+  });
+}
+// ── MY PAGE ──
+function initMy() {
+  if(!cu){showPg('pgSplash');return;}
+  document.getElementById('profName').textContent=cu.username;
+  document.getElementById('profSchool').textContent=`${cu.school} · ${cu.major}`;
+  document.getElementById('profAv').textContent=cu.username[0].toUpperCase();
+  const myR=rats.filter(r=>r.userId===cu.id);
+  const list=document.getElementById('myList'); list.innerHTML='';
+  if(!myR.length){list.innerHTML='<div class="empty"><div class="empty-ico">✍️</div>아직 남긴 평가가 없습니다.</div>';return;}
+  myR.forEach(c=>{
+    const ex=exs.find(e=>e.id===c.exhibitionId); if(!ex)return;
+    const el=document.createElement('div'); el.className='ci';
+    el.innerHTML=`<div style="font-size:12px;font-weight:700;margin-bottom:4px">${ex.title}</div><div class="ci-h">💬 내 마음</div><div class="ci-t">"${c.comment}"</div>`;
+    list.appendChild(el);
+  });
+}
+
+// ── EVENTS ──
+document.addEventListener('DOMContentLoaded', () => {
+  if(cu) { showPg('pgMap'); }
+
+  document.querySelectorAll('.atab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.atab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.afc').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on'); document.getElementById(t.dataset.t+'Form').classList.add('on');
+  });
+
+  document.getElementById('loginBtn').onclick = login;
+  document.getElementById('signupBtn').onclick = signup;
+  document.getElementById('logoutBtn').onclick = logout;
+  document.getElementById('backBtn').onclick = () => { if(detMM){detMM=null;} showPg(prevPg); };
+  document.querySelectorAll('.ni').forEach(n => n.onclick = () => showPg(n.dataset.pg));
+  document.getElementById('hAddBtn').onclick = () => { if(cu) document.getElementById('addModal').classList.add('on'); else openAuth('login'); };
+  document.getElementById('hMyBtn').onclick = () => { if(cu) showPg('pgMy'); else openAuth('login'); };
+  document.getElementById('closeAdd').onclick = () => document.getElementById('addModal').classList.remove('on');
+  document.getElementById('addModal').onclick = e => { if(e.target.id==='addModal') e.target.classList.remove('on'); };
+  document.getElementById('authOv').onclick = e => { if(e.target.id==='authOv') closeAuth(); };
+  document.getElementById('locFab').onclick = goToMyLoc;
+  document.getElementById('prevM').onclick = () => { calM--; if(calM<0){calM=11;calY--;} selCal=null; initCal(); };
+  document.getElementById('nextM').onclick = () => { calM++; if(calM>11){calM=0;calY++;} selCal=null; initCal(); };
+
+  document.getElementById('addForm').onsubmit = e => {
+    e.preventDefault();
+    const nx={id:exs.length+1,title:document.getElementById('exTitle').value,type:document.getElementById('exType').value,
+      location:document.getElementById('exLoc').value,lat:parseFloat(document.getElementById('exLat').value),
+      lng:parseFloat(document.getElementById('exLng').value),startDate:document.getElementById('exStart').value,
+      endDate:document.getElementById('exEnd').value,description:document.getElementById('exDesc').value};
+    exs.push(nx); localStorage.setItem('exs',JSON.stringify(exs));
+    document.getElementById('addForm').reset(); document.getElementById('addModal').classList.remove('on');
+    alert('전시가 등록되었습니다!'); initMap();
+  };
+
+  let ty=0; const bs=document.getElementById('bsht');
+  bs.ontouchstart = e => ty=e.touches[0].clientY;
+  bs.ontouchend = e => { if(e.changedTouches[0].clientY-ty>60) bs.classList.add('hide'); };
+});
 </script>
 </body>
 </html>
