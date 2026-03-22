@@ -4,7 +4,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ARTHERE</title>
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=377f2d2821388f56ba124060c27ff5be&libraries=services&autoload=false"></script>
+<script>
+// 카카오 지도 SDK를 동적으로 로드 — 완전히 준비된 후에만 사용
+var kakaoMapReady = false;
+var kakaoReadyCallbacks = [];
+
+function onKakaoReady(cb) {
+  if(kakaoMapReady) { cb(); return; }
+  kakaoReadyCallbacks.push(cb);
+}
+
+function loadKakaoSDK() {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=377f2d2821388f56ba124060c27ff5be&libraries=services&autoload=false';
+  script.onload = function() {
+    kakao.maps.load(function() {
+      kakaoMapReady = true;
+      kakaoReadyCallbacks.forEach(function(fn){ fn(); });
+      kakaoReadyCallbacks = [];
+    });
+  };
+  script.onerror = function() {
+    console.warn('카카오 지도 SDK 로드 실패. 도메인 등록을 확인해주세요.');
+    document.getElementById('map').innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;color:#666;font-family:sans-serif">' +
+      '<div style="font-size:32px">🗺️</div>' +
+      '<div style="font-size:14px;font-weight:600">지도를 불러올 수 없습니다</div>' +
+      '<div style="font-size:12px;color:#999">카카오 개발자 콘솔에서<br>현재 도메인을 등록해주세요</div>' +
+      '</div>';
+  };
+  document.head.appendChild(script);
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ── Aurora color palette (Lovi-inspired) ── */
@@ -85,22 +117,22 @@ body {
 ═══════════════════════════════ */
 #pgSplash {
   align-items:center; justify-content:flex-end; padding:0 28px 56px;
-  background: var(--aurora-dark);
+  background: linear-gradient(155deg, #c8c4e8 0%, #d4bfe8 35%, #e2c8f0 65%, #eecef5 100%);
   position:relative; overflow:hidden;
 }
-/* Aurora blobs */
+/* Pastel aurora blobs */
 #pgSplash::before {
   content:''; position:absolute; inset:0;
   background:
-    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(120,140,230,.55) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 75% 15%, rgba(190,130,250,.5) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 55% at 50% 60%, rgba(200,80,240,.35) 0%, transparent 70%),
-    radial-gradient(ellipse 45% 40% at 85% 70%, rgba(240,160,250,.4) 0%, transparent 65%);
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(200,210,250,.6) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 75% 15%, rgba(220,195,245,.55) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 55% at 50% 60%, rgba(230,190,245,.4) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 40% at 85% 70%, rgba(245,210,252,.45) 0%, transparent 65%);
   pointer-events:none;
 }
 #pgSplash::after {
   content:''; position:absolute; bottom:-80px; left:-40px; right:-40px; height:200px;
-  background:rgba(255,255,255,.07); border-radius:50%; filter:blur(30px);
+  background:rgba(255,255,255,.25); border-radius:50%; filter:blur(30px);
 }
 .spl-brand {
   position:absolute; top:50%; left:50%; transform:translate(-50%,-70%);
@@ -108,37 +140,37 @@ body {
 }
 .spl-icon {
   width:80px; height:80px; border-radius:22px;
-  background:rgba(255,255,255,.15); backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.55); backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.7);
   display:flex; align-items:center; justify-content:center;
-  font-family:'Playfair Display',serif; font-weight:900; font-size:28px; color:#fff;
+  font-family:'Playfair Display',serif; font-weight:900; font-size:28px; color:#58355e;
   letter-spacing:-1px;
-  box-shadow:0 8px 32px rgba(0,0,0,.2);
+  box-shadow:0 8px 32px rgba(88,53,94,.15);
 }
-.spl-name { font-family:'Playfair Display',serif; font-weight:900; font-size:38px; color:#fff; letter-spacing:-1px; }
-.spl-tagline { font-size:13px; color:rgba(255,255,255,.7); text-align:center; line-height:1.5; }
+.spl-name { font-family:'Playfair Display',serif; font-weight:900; font-size:38px; color:#3d2260; letter-spacing:-1px; }
+.spl-tagline { font-size:13px; color:rgba(61,34,96,.6); text-align:center; line-height:1.5; }
 .spl-actions { width:100%; display:flex; flex-direction:column; gap:10px; position:relative; z-index:2; }
 .spl-btn-main {
   width:100%; padding:17px;
-  background:#fff; color:var(--ink2);
+  background:#58355e; color:#fff;
   border:none; border-radius:50px;
   font-size:15px; font-weight:700;
   cursor:pointer; font-family:'Noto Sans KR',sans-serif;
   transition:all .2s;
-  box-shadow:0 4px 20px rgba(0,0,0,.15);
+  box-shadow:0 4px 20px rgba(88,53,94,.3);
 }
-.spl-btn-main:hover { background:#f0eeff; transform:translateY(-1px); }
+.spl-btn-main:hover { background:#3d2242; transform:translateY(-1px); }
 .spl-btn-ghost {
   width:100%; padding:15px;
-  background:transparent; color:rgba(255,255,255,.85);
-  border:none;
-  font-size:14px; font-weight:500;
+  background:rgba(255,255,255,.45); color:#3d2260;
+  border:1px solid rgba(255,255,255,.6); border-radius:50px;
+  font-size:14px; font-weight:600;
   cursor:pointer; font-family:'Noto Sans KR',sans-serif;
   transition:all .2s;
 }
-.spl-btn-ghost:hover { color:#fff; }
-.spl-legal { font-size:10px; color:rgba(255,255,255,.3); text-align:center; line-height:1.6; margin-top:4px; }
-.spl-legal a { color:rgba(255,255,255,.5); text-decoration:underline; }
+.spl-btn-ghost:hover { background:rgba(255,255,255,.7); }
+.spl-legal { font-size:10px; color:rgba(61,34,96,.4); text-align:center; line-height:1.6; margin-top:4px; }
+.spl-legal a { color:rgba(61,34,96,.6); text-decoration:underline; }
 
 /* ═══════════════════════════════
    AUTH SHEET
@@ -362,8 +394,8 @@ body {
   width:62px; height:62px; border-radius:12px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center; font-size:24px;
 }
-.cal-exc-ph.s { background:#f0f0f2; }
-.cal-exc-ph.g { background:#ebebed; }
+.cal-exc-ph.s { }
+.cal-exc-ph.g { }
 .cal-exc-bd { flex:1; min-width:0; }
 .cal-exc-title { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cal-exc-meta { font-size:11px; color:var(--muted); margin-bottom:5px; }
@@ -973,7 +1005,7 @@ function showPg(name) {
   if(name==='pgMap') {
     setTimeout(() => {
       if(!map) initMap();
-      else { kakao.maps.load(() => map.relayout()); }
+      else { onKakaoReady(() => map.relayout()); }
     }, 100);
   }
   if(name==='pgCal') initCal();
@@ -989,14 +1021,14 @@ function setFilter(f) {
   ['all','student','graduation'].forEach(x=>
     document.getElementById({all:'fa',student:'fs',graduation:'fg'}[x]).classList.toggle('on',x===f)
   );
-  initMap();
+  onKakaoReady(() => initMap());
 }
 
 function initMap(centerLat, centerLng) {
   const container = document.getElementById('map');
   if(!container) return;
 
-  kakao.maps.load(() => {
+  onKakaoReady(() => {
     // 기존 마커 제거
     markers.forEach(m => m.setMap(null)); markers = []; selMarkId = null;
 
@@ -1022,17 +1054,13 @@ function initMap(centerLat, centerLng) {
     filtered.forEach(ex => {
       const lbl = ex.title.length>10 ? ex.title.slice(0,10)+'…' : ex.title;
       const isS = ex.type==='student';
-      const content = `<div class="kakao-marker ${isS?'s':'g'}" id="ml-${ex.id}">${lbl}</div>`;
+      const content = `<div class="kakao-marker ${isS?'s':'g'}" id="ml-${ex.id}" onclick="selMark(${ex.id})">${lbl}</div>`;
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(ex.lat, ex.lng),
         content: content,
         yAnchor: 1.3
       });
       overlay.setMap(map);
-      setTimeout(() => {
-        const el = document.getElementById(`ml-${ex.id}`);
-        if(el) el.addEventListener('click', () => selMark(ex.id));
-      }, 150);
       overlay._exId = ex.id;
       markers.push(overlay);
     });
@@ -1055,7 +1083,7 @@ function addMyLocMarker(lat, lng) {
 // ① Location-first start
 function startWithLocation() {
   showPg('pgMap');
-  kakao.maps.load(() => {
+  onKakaoReady(() => {
     if(!navigator.geolocation) { initMap(); return; }
     navigator.geolocation.getCurrentPosition(
       pos => initMap(pos.coords.latitude, pos.coords.longitude),
@@ -1068,7 +1096,7 @@ function goToMyLoc() {
   if(!navigator.geolocation){alert('위치 서비스를 지원하지 않습니다.');return;}
   navigator.geolocation.getCurrentPosition(pos=>{
     const {latitude:lat, longitude:lng} = pos.coords;
-    kakao.maps.load(() => {
+    onKakaoReady(() => {
       if(!map) { initMap(lat, lng); return; }
       map.setCenter(new kakao.maps.LatLng(lat, lng));
       map.setLevel(4);
@@ -1118,7 +1146,7 @@ function selMark(id) {
     nearby.forEach(ex=>{
       const a2=avgS(ex.id), c2=rats.filter(r=>r.exhibitionId===ex.id).length, isS2=ex.type==='student';
       const card=document.createElement('div'); card.className='exc su';
-      card.innerHTML=`<div class="exc-ph ${isS2?'s':'g'}">${isS2?'🎨':'🎓'}</div>
+      card.innerHTML=`<div class="exc-ph ${isS2?'s':'g'}" style="background:${cvr(ex.id)}">${isS2?'🎨':'🎓'}</div>
         <div class="exc-bd">
           <span class="exc-badge ${isS2?'s':'g'}">${isS2?'대학생 기획':'졸업전시'}</span>
           <div class="exc-title">${ex.title}</div>
@@ -1155,7 +1183,7 @@ function showDetail(id) {
   if(detMM){detMM=null;}
   showPg('pgDet');
   setTimeout(()=>{
-    kakao.maps.load(() => {
+    onKakaoReady(() => {
       const mmContainer = document.getElementById('detMmap');
       mmContainer.innerHTML = '';
       detMM = new kakao.maps.Map(mmContainer, {
@@ -1245,7 +1273,7 @@ function showCalEvs(ds) {
   devs.forEach(ex=>{
     const a=avgS(ex.id), cnt=rats.filter(r=>r.exhibitionId===ex.id).length, isS=ex.type==='student';
     const card=document.createElement('div'); card.className='cal-exc su';
-    card.innerHTML=`<div class="cal-exc-ph ${isS?'s':'g'}">${isS?'🎨':'🎓'}</div>
+    card.innerHTML=`<div class="cal-exc-ph ${isS?'s':'g'}" style="background:${cvr(ex.id)}">${isS?'🎨':'🎓'}</div>
       <div class="cal-exc-bd">
         <div class="cal-exc-title">${ex.title}</div>
         <div class="cal-exc-meta">📍 ${ex.location} · ${ex.startDate} ~ ${ex.endDate}</div>
@@ -1341,23 +1369,41 @@ function renderDiscCards(list) {
 }
 // ── MY PAGE ──
 function initMy() {
-  if(!cu){showPg('pgSplash');return;}
-  document.getElementById('profName').textContent=cu.username;
-  document.getElementById('profSchool').textContent=`${cu.school} · ${cu.major}`;
-  document.getElementById('profAv').textContent=cu.username[0].toUpperCase();
-  const myR=rats.filter(r=>r.userId===cu.id);
-  const list=document.getElementById('myList'); list.innerHTML='';
-  if(!myR.length){list.innerHTML='<div class="empty"><div class="empty-ico">✍️</div>아직 남긴 평가가 없습니다.</div>';return;}
-  myR.forEach(c=>{
-    const ex=exs.find(e=>e.id===c.exhibitionId); if(!ex)return;
-    const el=document.createElement('div'); el.className='ci';
-    el.innerHTML=`<div style="font-size:12px;font-weight:700;margin-bottom:4px">${ex.title}</div><div class="ci-h">💬 내 마음</div><div class="ci-t">"${c.comment}"</div>`;
+  if(!cu) {
+    // 비로그인 상태 — 게스트 화면 표시
+    document.getElementById('profAv').textContent = '?';
+    document.getElementById('profName').textContent = '로그인이 필요해요';
+    document.getElementById('profSchool').textContent = '로그인하고 더 많은 기능을 이용해보세요';
+    document.getElementById('myList').innerHTML = `
+      <div style="text-align:center;padding:28px 0">
+        <div style="font-size:40px;margin-bottom:12px">✍️</div>
+        <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">아직 남긴 마음이 없어요</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:20px">로그인하면 전시에 마음을 남길 수 있어요</div>
+        <button onclick="openAuth('login')" style="background:var(--accent);color:#fff;border:none;padding:12px 28px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">로그인 / 회원가입</button>
+      </div>`;
+    document.getElementById('logoutBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('logoutBtn').style.display = '';
+  document.getElementById('profName').textContent = cu.username;
+  document.getElementById('profSchool').textContent = `${cu.school} · ${cu.major}`;
+  document.getElementById('profAv').textContent = cu.username[0].toUpperCase();
+  const myR = rats.filter(r => r.userId === cu.id);
+  const list = document.getElementById('myList'); list.innerHTML = '';
+  if(!myR.length) { list.innerHTML = '<div class="empty"><div class="empty-ico">✍️</div>아직 남긴 마음이 없습니다.</div>'; return; }
+  myR.forEach(c => {
+    const ex = exs.find(e => e.id === c.exhibitionId); if(!ex) return;
+    const el = document.createElement('div'); el.className = 'ci';
+    el.innerHTML = `<div style="font-size:12px;font-weight:700;margin-bottom:4px">${ex.title}</div><div class="ci-h">💬 내 마음</div><div class="ci-t">"${c.comment}"</div>`;
     list.appendChild(el);
   });
 }
 
 // ── EVENTS ──
 document.addEventListener('DOMContentLoaded', () => {
+  // SDK 먼저 로드
+  loadKakaoSDK();
+
   if(cu) { showPg('pgMap'); }
 
   document.querySelectorAll('.atab').forEach(t => t.onclick = () => {
@@ -1372,7 +1418,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('backBtn').onclick = () => { if(detMM){detMM=null;} showPg(prevPg); };
   document.querySelectorAll('.ni').forEach(n => n.onclick = () => showPg(n.dataset.pg));
   document.getElementById('hAddBtn').onclick = () => { if(cu) document.getElementById('addModal').classList.add('on'); else openAuth('login'); };
-  document.getElementById('hMyBtn').onclick = () => { if(cu) showPg('pgMy'); else openAuth('login'); };
+  document.getElementById('hMyBtn').onclick = () => showPg('pgMy');
   document.getElementById('closeAdd').onclick = () => document.getElementById('addModal').classList.remove('on');
   document.getElementById('addModal').onclick = e => { if(e.target.id==='addModal') e.target.classList.remove('on'); };
   document.getElementById('authOv').onclick = e => { if(e.target.id==='authOv') closeAuth(); };
@@ -1388,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', () => {
       endDate:document.getElementById('exEnd').value,description:document.getElementById('exDesc').value};
     exs.push(nx); localStorage.setItem('exs',JSON.stringify(exs));
     document.getElementById('addForm').reset(); document.getElementById('addModal').classList.remove('on');
-    alert('전시가 등록되었습니다!'); initMap();
+    alert('전시가 등록되었습니다!'); onKakaoReady(() => initMap());
   };
 
   let ty=0; const bs=document.getElementById('bsht');
