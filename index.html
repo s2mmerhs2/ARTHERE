@@ -37,7 +37,7 @@ function loadKakaoSDK() {
   document.head.appendChild(script);
 }
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ── Aurora color palette (Lovi-inspired) ── */
 :root {
@@ -93,7 +93,7 @@ body {
   align-items:center; justify-content:space-between; z-index:200; flex-shrink:0;
 }
 .hdr.on { display:flex; }
-.hlogo { font-family:'Gowun Batang',serif; font-weight:900; font-size:20px; letter-spacing:-.5px; color:var(--ink); }
+.hlogo { font-family:'Playfair Display',serif; font-weight:900; font-size:20px; letter-spacing:-.5px; color:var(--ink); }
 .hlogo b { background:var(--aurora-bg); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
 .hbtns { display:flex; gap:6px; }
 .hbtn {
@@ -117,22 +117,22 @@ body {
 ═══════════════════════════════ */
 #pgSplash {
   align-items:center; justify-content:flex-end; padding:0 28px 56px;
-  background: linear-gradient(155deg, #c8c4e8 0%, #d4bfe8 35%, #e2c8f0 65%, #eecef5 100%);
+  background: linear-gradient(155deg, #0f0a1e 0%, #1e1040 35%, #2d1660 65%, #3d1f7a 100%);
   position:relative; overflow:hidden;
 }
-/* Pastel aurora blobs */
+/* Dark aurora blobs */
 #pgSplash::before {
   content:''; position:absolute; inset:0;
   background:
-    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(200,210,250,.6) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 75% 15%, rgba(220,195,245,.55) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 55% at 50% 60%, rgba(230,190,245,.4) 0%, transparent 70%),
-    radial-gradient(ellipse 45% 40% at 85% 70%, rgba(245,210,252,.45) 0%, transparent 65%);
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(100,80,200,.45) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 78% 15%, rgba(160,80,220,.38) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 50% 65%, rgba(80,40,160,.3) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 40% at 85% 75%, rgba(200,80,180,.28) 0%, transparent 65%);
   pointer-events:none;
 }
 #pgSplash::after {
   content:''; position:absolute; bottom:-80px; left:-40px; right:-40px; height:200px;
-  background:rgba(255,255,255,.25); border-radius:50%; filter:blur(30px);
+  background:rgba(255,255,255,.04); border-radius:50%; filter:blur(30px);
 }
 .spl-brand {
   position:absolute; top:50%; left:50%; transform:translate(-50%,-70%);
@@ -140,37 +140,29 @@ body {
 }
 .spl-icon {
   width:80px; height:80px; border-radius:22px;
-  background:rgba(255,255,255,.55); backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.7);
+  background:rgba(255,255,255,.12); backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.2);
   display:flex; align-items:center; justify-content:center;
-  font-family:'Gowun Batang',serif; font-weight:900; font-size:28px; color:#58355e;
-  letter-spacing:-1px;
-  box-shadow:0 8px 32px rgba(88,53,94,.15);
+  font-family:'Playfair Display',serif; font-weight:900; font-size:28px; color:#fff;
+  letter-spacing:-1px; box-shadow:0 8px 32px rgba(0,0,0,.35);
 }
-.spl-name { font-family:'Gowun Batang',serif; font-weight:900; font-size:38px; color:#3d2260; letter-spacing:-1px; }
-.spl-tagline { font-size:13px; color:rgba(61,34,96,.6); text-align:center; line-height:1.5; }
+.spl-tagline { font-size:13px; color:rgba(255,255,255,.55); text-align:center; line-height:1.5; }
 .spl-actions { width:100%; display:flex; flex-direction:column; gap:10px; position:relative; z-index:2; }
 .spl-btn-main {
-  width:100%; padding:17px;
-  background:#58355e; color:#fff;
-  border:none; border-radius:50px;
-  font-size:15px; font-weight:700;
-  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
-  transition:all .2s;
-  box-shadow:0 4px 20px rgba(88,53,94,.3);
+  width:100%; padding:17px; background:#fff; color:#1e1040;
+  border:none; border-radius:50px; font-size:15px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+  box-shadow:0 4px 24px rgba(0,0,0,.3);
 }
-.spl-btn-main:hover { background:#3d2242; transform:translateY(-1px); }
+.spl-btn-main:hover { background:#f0eeff; transform:translateY(-1px); }
 .spl-btn-ghost {
-  width:100%; padding:15px;
-  background:rgba(255,255,255,.45); color:#3d2260;
-  border:1px solid rgba(255,255,255,.6); border-radius:50px;
-  font-size:14px; font-weight:600;
-  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
-  transition:all .2s;
+  width:100%; padding:15px; background:rgba(255,255,255,.1); color:rgba(255,255,255,.8);
+  border:1px solid rgba(255,255,255,.2); border-radius:50px; font-size:14px; font-weight:500;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s;
 }
-.spl-btn-ghost:hover { background:rgba(255,255,255,.7); }
-.spl-legal { font-size:10px; color:rgba(61,34,96,.4); text-align:center; line-height:1.6; margin-top:4px; }
-.spl-legal a { color:rgba(61,34,96,.6); text-decoration:underline; }
+.spl-btn-ghost:hover { background:rgba(255,255,255,.18); color:#fff; }
+.spl-legal { font-size:10px; color:rgba(255,255,255,.25); text-align:center; line-height:1.6; margin-top:4px; }
+.spl-legal a { color:rgba(255,255,255,.45); text-decoration:underline; }
 
 /* ═══════════════════════════════
    AUTH SHEET
@@ -237,7 +229,14 @@ body {
   box-shadow:var(--sh2); cursor:pointer; font-size:11px; font-weight:700;
   color:var(--ink2); font-family:'Noto Sans KR',sans-serif; transition:all .2s; white-space:nowrap;
 }
+/* 전체 — 기본 보라 */
 .mfbtn.on { background:var(--accent); color:#fff; }
+/* 기획(student) — 파랑 계열 */
+#fs.on { background:#5b6ef5; color:#fff; }
+/* 소모임(club) — 보라 계열 */
+#fc.on { background:#6d4fc2; color:#fff; }
+/* 졸전(graduation) — 진보라 계열 */
+#fg.on { background:#9b59b6; color:#fff; }
 #map { position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; }
 .loc-fab {
   position:absolute; bottom:80px; right:12px; z-index:500;
@@ -785,12 +784,16 @@ body {
   content:''; position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
   width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent;
 }
+/* 기획 — 파랑 */
 .kakao-marker.s { background:#5b6ef5; color:#fff; }
 .kakao-marker.s::after { border-top:7px solid #5b6ef5; }
+/* 소모임 — 보라 */
 .kakao-marker.c { background:#6d4fc2; color:#fff; }
 .kakao-marker.c::after { border-top:7px solid #6d4fc2; }
+/* 졸전 — 진보라 */
 .kakao-marker.g { background:#9b59b6; color:#fff; }
 .kakao-marker.g::after { border-top:7px solid #9b59b6; }
+/* 선택됨 — 핑크 */
 .kakao-marker.sel { background:#be185d; border-color:#fff; }
 .kakao-marker.sel::after { border-top-color:#be185d; }
 ::-webkit-scrollbar { width:3px; }
@@ -1444,8 +1447,8 @@ function initMap(centerLat, centerLng) {
   if(!container) return;
 
   onKakaoReady(() => {
-    // 기존 마커 제거
-    markers.forEach(m => m.setMap(null)); markers = []; selMarkId = null;
+    markers.forEach(m => { try { m.setMap(null); } catch(e){} });
+    markers = []; selMarkId = null;
 
     const lat = centerLat || 37.5665, lng = centerLng || 126.9780;
     const level = centerLat ? 4 : 6;
@@ -1461,18 +1464,25 @@ function initMap(centerLat, centerLng) {
       map.setCenter(new kakao.maps.LatLng(lat, lng));
       map.setLevel(level);
     }
-
-    // 컨테이너 크기 재계산 (display:none → flex 전환 후 필수)
     map.relayout();
 
     const filtered = curFilter==='all' ? exs : exs.filter(e=>e.type===curFilter);
     filtered.forEach(ex => {
-      const lbl = ex.title.length>10 ? ex.title.slice(0,10)+'…' : ex.title;
+      const lbl = ex.title.length>10 ? ex.title.slice(0,10)+'\u2026' : ex.title;
       const cls = ex.type==='graduation' ? 'g' : ex.type==='club' ? 'c' : 's';
-      const content = `<div class="kakao-marker ${cls}" id="ml-${ex.id}" onclick="selMark(${ex.id})" style="cursor:pointer;pointer-events:auto">${lbl}</div>`;
+
+      // DOM Element로 직접 생성 → addEventListener 즉시 바인딩 가능
+      const labelDiv = document.createElement('div');
+      labelDiv.className = 'kakao-marker ' + cls;
+      labelDiv.id = 'ml-' + ex.id;
+      labelDiv.textContent = lbl;
+      labelDiv.style.cssText = 'cursor:pointer;pointer-events:auto;user-select:none;';
+      labelDiv.addEventListener('click', (function(id){ return function(e){ e.stopPropagation(); window.selMark(id); }; })(ex.id));
+      labelDiv.addEventListener('touchend', (function(id){ return function(e){ e.stopPropagation(); e.preventDefault(); window.selMark(id); }; })(ex.id));
+
       const overlay = new kakao.maps.CustomOverlay({
         position: new kakao.maps.LatLng(ex.lat, ex.lng),
-        content: content,
+        content: labelDiv,
         yAnchor: 1.3,
         zIndex: 3
       });
@@ -1484,7 +1494,6 @@ function initMap(centerLat, centerLng) {
     if(centerLat) addMyLocMarker(centerLat, centerLng);
   });
 }
-
 function addMyLocMarker(lat, lng) {
   if(myLocM) myLocM.setMap(null);
   const content = `<div style="width:18px;height:18px;background:#6d4fc2;border-radius:50%;border:3px solid white;box-shadow:0 0 0 5px rgba(109,79,194,.25)"></div>`;
@@ -1527,11 +1536,12 @@ window.selMark = function selMark(id) {
   selMarkId = id;
   // reset all markers
   markers.forEach(m => {
-    const el = document.getElementById(`ml-${m._exId}`);
-    if(el) el.classList.remove('sel');
+    const el = m.getContent ? m.getContent() : document.getElementById(`ml-${m._exId}`);
+    if(el && el.classList) el.classList.remove('sel');
   });
-  const selEl = document.getElementById(`ml-${id}`);
-  if(selEl) selEl.classList.add('sel');
+  const selOverlay = markers.find(m => m._exId === id);
+  const selEl = selOverlay && selOverlay.getContent ? selOverlay.getContent() : document.getElementById(`ml-${id}`);
+  if(selEl && selEl.classList) selEl.classList.add('sel');
   const sel=exs.find(e=>e.id===id); if(!sel)return;
   const nearby=exs.filter(e=>e.id!==id&&(curFilter==='all'||e.type===curFilter))
     .map(e=>({...e,d:Math.hypot(e.lat-sel.lat,e.lng-sel.lng)}))
