@@ -1768,6 +1768,124 @@ body {
 
 <!-- Kakao Maps loaded in head -->
 <script>
+// ── 전역 상태 ──
+var map = null, markers = [], myLocM = null;
+var curFilter = 'all', selMarkId = null;
+var curUserLat = null, curUserLng = null;
+var detMM = null, curExId = null, prevPg = 'pgMap';
+var calY = new Date().getFullYear(), calM = new Date().getMonth(), selCal = null;
+
+// ── localStorage 기반 데이터 ──
+var users  = JSON.parse(localStorage.getItem('users')  || '[]');
+var scraps = JSON.parse(localStorage.getItem('scraps') || '[]');
+var cu     = JSON.parse(localStorage.getItem('cu')     || 'null');
+
+// 초기 전시 데이터
+var dE = [
+  {id:1,title:'홍익대 시각디자인과 졸업전시 2025',type:'graduation',location:'홍익대학교 현대미술관',lat:37.5511,lng:126.9251,startDate:'2025-11-10',endDate:'2025-11-22',description:'홍익대학교 시각디자인학과 졸업생들의 열정적인 작품들을 만나보세요. 브랜딩, 타이포그래피, 패키지디자인, UI/UX 등 다양한 분야의 졸업작품이 전시됩니다.',artist:'홍익대 시각디자인과',artistBio:'홍익대학교 시각디자인학과 2025년 졸업 동기',instagram:'hongik_vd2025'},
+  {id:2,title:'국민대 공업디자인 졸업전시',type:'graduation',location:'국민대학교 종합예술관',lat:37.6027,lng:126.9205,startDate:'2025-11-05',endDate:'2025-11-17',description:'국민대학교 공업디자인학과 졸업생들의 제품 디자인, 운송 디자인, 인터랙션 디자인 작품 전시. 미래 산업을 이끌 디자이너들의 비전을 확인하세요.',artist:'국민대 공업디자인과',artistBio:'창의적 제품 디자인을 연구하는 졸업생 모임',instagram:'kookmin_id2025'},
+  {id:3,title:'서울대 미술대학 소모임 기획전: 색의 감각',type:'club',location:'서울대학교 미술관',lat:37.4605,lng:126.9527,startDate:'2025-10-15',endDate:'2025-10-31',description:'서울대학교 미술학과 소모임 "팔레트"의 기획전시. 다양한 색채 실험과 감각적 표현을 탐구하는 12인의 작품전.',artist:'팔레트 소모임',artistBio:'서울대 미술학과 색채 연구 소모임'},
+  {id:4,title:'이화여대 패션디자인 졸업작품전',type:'graduation',location:'이화여자대학교 ECC',lat:37.5621,lng:126.9467,startDate:'2025-11-18',endDate:'2025-11-25',description:'이화여자대학교 패션디자인과 졸업생들의 2025 S/S 컬렉션 런웨이 및 전시. 지속가능한 패션, 전통과 현대의 융합 등 다양한 주제의 작품을 선보입니다.',artist:'이화여대 패션디자인과',artistBio:'지속가능한 패션을 연구하는 졸업생들',instagram:'ewha_fashion2025'},
+  {id:5,title:'중앙대 사진학과 기획전 — 도시의 풍경',type:'student',location:'중앙대학교 아트센터',lat:37.5046,lng:126.9548,startDate:'2025-10-20',endDate:'2025-11-10',description:'중앙대학교 사진학과 학생들이 바라본 도시의 다양한 풍경. 골목, 빛, 사람들의 이야기를 담은 사진전.',artist:'중앙대 사진학과',artistBio:'도시의 일상을 카메라에 담는 학생들'},
+  {id:6,title:'홍익대 금속조형 소모임전 : 흐름',type:'club',location:'홍익대학교 조형관',lat:37.5513,lng:126.9249,startDate:'2025-10-25',endDate:'2025-11-08',description:'홍익대학교 금속조형디자인과 소모임 "플럭스"의 전시. 금속의 물성과 흐름을 탐구한 설치작품 및 오브제 8점.',artist:'플럭스',artistBio:'금속 조형 연구 소모임',instagram:'flux_hongik'},
+  {id:7,title:'연세대 디자인학부 졸업전시 2025',type:'graduation',location:'연세대학교 위당관',lat:37.5649,lng:126.9381,startDate:'2025-11-12',endDate:'2025-11-19',description:'연세대학교 디자인학부 졸업생들의 브랜딩, 그래픽, 공간 디자인 작품 전시. 사회적 메시지를 담은 디자인을 경험하세요.',artist:'연세대 디자인학부',artistBio:'연세대학교 디자인학부 2025 졸업생'},
+  {id:8,title:'성균관대 미술학과 기획전: 경계',type:'student',location:'성균관대학교 600주년기념관',lat:37.5877,lng:126.9927,startDate:'2025-10-28',endDate:'2025-11-14',description:'경계에 대한 탐구. 내부와 외부, 가상과 현실, 나와 타자 사이의 경계를 탐색하는 8인의 회화 및 설치 작품.',artist:'성균관대 미술학과',artistBio:'경계와 정체성을 연구하는 미술학과 학생 그룹'},
+  {id:9,title:'서울예대 사진과 졸업전시',type:'graduation',location:'서울예술대학교 전시관',lat:37.3961,lng:126.9218,startDate:'2025-11-03',endDate:'2025-11-15',description:'서울예술대학교 사진과 졸업생들의 개인 프로젝트. 다큐멘터리, 파인아트 사진, 디지털 이미지 등 다채로운 시각 언어로 세상을 담아냅니다.',artist:'서울예대 사진과',artistBio:'시각예술을 탐구하는 졸업생들',instagram:'seoularts_photo2025'},
+  {id:10,title:'국민대 자동차·운송디자인 졸업전',type:'graduation',location:'국민대학교 종합예술관',lat:37.6027,lng:126.9205,startDate:'2025-11-08',endDate:'2025-11-20',description:'국민대학교 자동차·운송디자인학과 졸업생들의 미래 모빌리티 비전. 자율주행, 친환경 교통수단, 우주 운송 등 혁신적 컨셉 전시.',artist:'국민대 자동차운송디자인과',artistBio:'미래 모빌리티를 설계하는 학생들',instagram:'kookmin_transportation2025'},
+  {id:11,title:'한양대 커뮤니케이션디자인 졸업전',type:'graduation',location:'한양대학교 백남음악관',lat:37.5576,lng:127.0496,startDate:'2025-11-14',endDate:'2025-11-21',description:'한양대학교 커뮤니케이션디자인학과 졸업전. 사회적 문제를 시각언어로 해결하려는 32인의 디자이너들의 작품.',artist:'한양대 커뮤니케이션디자인과',artistBio:'소통하는 디자인을 만드는 학생들'},
+  {id:12,title:'건국대 소모임 기획전 — 기억의 조각',type:'club',location:'건국대학교 예술문화관',lat:37.5399,lng:127.0702,startDate:'2025-10-18',endDate:'2025-11-02',description:'건국대학교 시각디자인과 소모임 "모자이크"의 3번째 기획전시. 기억과 파편에 대한 7인의 실험적 작품들.',artist:'모자이크',artistBio:'시각적 실험을 즐기는 건국대 소모임',instagram:'mosaic_konkuk'},
+  {id:13,title:'서울대 공예과 소모임전: 물질과 손',type:'club',location:'서울대학교 미술관',lat:37.4605,lng:126.9527,startDate:'2025-11-01',endDate:'2025-11-12',description:'손으로 빚어내는 예술. 도예, 금속공예, 섬유 등 다양한 소재와 기법으로 물질의 본질을 탐구합니다.',artist:'서울대 공예연구회',artistBio:'서울대 공예과 재학생 소모임'},
+  {id:14,title:'명지대 시각디자인 졸업전시 2025',type:'graduation',location:'명지대학교 인문캠퍼스 아트홀',lat:37.5535,lng:126.9183,startDate:'2025-11-17',endDate:'2025-11-23',description:'명지대학교 시각디자인학과 2025 졸업전시. 브랜드 아이덴티티, 타이포그래피, 영상 디자인 등 다양한 매체를 활용한 졸업작품.',artist:'명지대 시각디자인학과',artistBio:'감각적 시각디자인을 연구하는 졸업생들'},
+  {id:15,title:'동국대 영화과 단편영화제 & 포스터전',type:'student',location:'동국대학교 문화관',lat:37.5588,lng:126.9989,startDate:'2025-10-24',endDate:'2025-11-07',description:'동국대학교 영화과 학생들의 단편영화 상영 및 포스터 전시. 사회적 메시지를 담은 단편 12편과 관련 그래픽 작품전.',artist:'동국대 영화과',artistBio:'영상으로 세상을 이야기하는 학생들'},
+];
+
+// 초기 리뷰 데이터
+var dR = [
+  {id:1,exhibitionId:1,userId:999,rating:5,comment:'정말 놀라운 졸업전시였어요. 작품들 하나하나에 정성이 담겨있고 완성도가 높았습니다. 특히 타이포그래피 섹션이 인상적이었어요!'},
+  {id:2,exhibitionId:1,userId:998,rating:4,comment:'홍대 시디과 졸전은 역시 수준이 다르네요. 브랜딩 프로젝트들이 모두 실무 수준이었어요.'},
+  {id:3,exhibitionId:2,userId:997,rating:5,comment:'국민대 공디 졸전! 제품 디자인 프로토타입들이 실제 출시해도 될 것 같은 퀄리티. 운송디자인 섹션도 미래지향적이었습니다.'},
+  {id:4,exhibitionId:4,userId:996,rating:5,comment:'이화여대 패션 졸전 너무 아름다웠어요. 한복에서 영감받은 현대 패션 컬렉션이 특히 기억에 남아요.'},
+  {id:5,exhibitionId:3,userId:995,rating:4,comment:'서울대 팔레트 소모임전, 색채 실험이 흥미로웠습니다. 공간 자체가 작품 같은 느낌.'},
+  {id:6,exhibitionId:6,userId:994,rating:5,comment:'플럭스 전시 진짜 대박이었어요. 금속이 이렇게 우아해질 수 있다니 놀랐습니다.'},
+];
+
+var exs  = JSON.parse(localStorage.getItem('exs')  || 'null') || [];
+var rats = JSON.parse(localStorage.getItem('rats') || 'null') || [];
+
+// ── 색상 헬퍼 ──
+const COVER_COLORS = [
+  'linear-gradient(135deg,#7b8cde,#a78bfa)',
+  'linear-gradient(135deg,#a78bfa,#c084fc)',
+  'linear-gradient(135deg,#c084fc,#e879f9)',
+  'linear-gradient(135deg,#6d4fc2,#9b59b6)',
+  'linear-gradient(135deg,#5b6ef5,#7b8cde)',
+  'linear-gradient(135deg,#e879f9,#f0abfc)',
+  'linear-gradient(135deg,#9b59b6,#c084fc)',
+  'linear-gradient(135deg,#4c35a0,#7b8cde)',
+];
+function cvr(id) { return COVER_COLORS[(id-1) % COVER_COLORS.length]; }
+
+// ── 자동완성 ──
+function acSchool(q) {
+  const list = document.getElementById('acSchoolList');
+  if(!q){list.style.display='none';return;}
+  const matches = Object.keys(SCHOOL_MAJORS).filter(s=>s.includes(q)).slice(0,6);
+  if(!matches.length){list.style.display='none';return;}
+  list.innerHTML = matches.map(s=>`<div class="ac-item" onmousedown="document.getElementById('suschool').value='${s}';closeAc('acSchoolList');acMajorLoad('${s}')">${s.replace(q,'<b>'+q+'</b>')}</div>`).join('');
+  list.style.display='block';
+}
+function acMajorLoad(school) {
+  const depts = SCHOOL_MAJORS[school] || [];
+  const majorInput = document.getElementById('sumajor');
+  if(majorInput) majorInput.dataset.depts = JSON.stringify(depts);
+}
+function acMajor(q) {
+  const list = document.getElementById('acMajorList');
+  if(!q){list.style.display='none';return;}
+  const school = document.getElementById('suschool').value;
+  const depts = school && SCHOOL_MAJORS[school] ? SCHOOL_MAJORS[school] : Object.values(SCHOOL_MAJORS).flat();
+  const matches = [...new Set(depts)].filter(d=>d.includes(q)).slice(0,6);
+  if(!matches.length){list.style.display='none';return;}
+  list.innerHTML = matches.map(d=>`<div class="ac-item" onmousedown="document.getElementById('sumajor').value='${d}';closeAc('acMajorList')">${d.replace(q,'<b>'+q+'</b>')}</div>`).join('');
+  list.style.display='block';
+}
+function closeAc(id) { const el=document.getElementById(id); if(el) el.style.display='none'; }
+
+// ── 지도 검색 ──
+function initMapSearch() {
+  const input = document.querySelector('.map-search');
+  if(!input) return;
+  input.addEventListener('keydown', function(e) {
+    if(e.key === 'Enter') {
+      const q = this.value.trim();
+      if(!q) return;
+      // 전시명으로 검색
+      const found = exs.filter(ex => ex.title.includes(q) || ex.location.includes(q));
+      if(found.length) {
+        onKakaoReady(() => {
+          const ex = found[0];
+          map.setCenter(new kakao.maps.LatLng(ex.lat, ex.lng));
+          map.setLevel(4);
+          window.selMark(ex.id);
+        });
+      } else {
+        // 카카오 주소 검색
+        onKakaoReady(() => {
+          const geocoder = new kakao.maps.services.Geocoder();
+          geocoder.addressSearch(q, function(result, status) {
+            if(status === kakao.maps.services.Status.OK) {
+              map.setCenter(new kakao.maps.LatLng(result[0].y, result[0].x));
+              map.setLevel(5);
+            } else {
+              alert('검색 결과가 없습니다.');
+            }
+          });
+        });
+      }
+    }
+  });
+}
+
 // ── 학교별 실제 학과 데이터 (확장판) ──
 const SCHOOL_MAJORS = {
   '가천대학교': ['미술·디자인학부','시각디자인학과','패션디자인학과','산업디자인학과','미디어커뮤니케이션학과','실내건축학과'],
@@ -1818,8 +1936,8 @@ if(!localStorage.getItem('arth_v9')){
   localStorage.removeItem('arth_v6');
   localStorage.setItem('arth_v9','1');
 } else {
-  if(!exs.length){exs=dE;localStorage.setItem('exs',JSON.stringify(exs));}
-  if(!rats.length){rats=dR;localStorage.setItem('rats',JSON.stringify(rats));}
+  if(!exs || !exs.length){exs=dE;localStorage.setItem('exs',JSON.stringify(exs));}
+  if(!rats || !rats.length){rats=dR;localStorage.setItem('rats',JSON.stringify(rats));}
 }
 
 // ── HELPERS ──
@@ -3074,6 +3192,7 @@ function renderUnivSearch(el) {
 document.addEventListener('DOMContentLoaded', () => {
   // SDK 먼저 로드
   loadKakaoSDK();
+  initMapSearch();
 
   if(cu) { showPg('pgMap'); }
 
