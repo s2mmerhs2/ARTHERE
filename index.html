@@ -1034,6 +1034,19 @@ body {
           </div>
         </div>
 
+        <!-- 게스트 로그인 유도 배너 -->
+        <div id="guestBanner" style="display:none; margin:0 16px 16px;">
+          <div style="background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:24px 20px;text-align:center;box-shadow:var(--sh1);">
+            <div style="font-size:36px;margin-bottom:12px;">🎨</div>
+            <div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px;">ARTHERE와 함께해요</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px;">로그인하면 전시 스크랩, 후기 남기기,<br>나만의 예술 기록을 시작할 수 있어요.</div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="openAuth('login')" style="flex:1;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">로그인</button>
+              <button onclick="openAuth('signup')" style="flex:1;padding:13px;background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">회원가입</button>
+            </div>
+          </div>
+        </div>
+
         <!-- 2. 메뉴 카드 3종 -->
         <div class="my-menu-card" onclick="document.getElementById('myReviewSec').scrollIntoView({behavior:'smooth'})">
           <div class="my-menu-icon" style="background:#ede9fe">✍️</div>
@@ -2355,10 +2368,12 @@ function renderDiscCards(list) {
 // ── MY PAGE ──
 function initMy() {
   if(!cu) {
-    document.getElementById('profAv').textContent = '?';
+    document.getElementById('profAv').textContent = '🎨';
+    document.getElementById('profAv').style.fontSize = '28px';
     document.getElementById('profName').textContent = '게스트';
-    document.getElementById('profSchool').textContent = '로그인하고 더 많은 기능을 사용해보세요';
+    document.getElementById('profSchool').textContent = '로그인하고 나만의 예술 기록을 시작해요';
     document.getElementById('mySettingBtn').style.display = 'none';
+    document.getElementById('guestBanner').style.display = 'block';
     document.getElementById('myReviewNum').textContent = '0';
     document.getElementById('myReviewCount').textContent = '0개의 소중한 기록';
     document.getElementById('myScrapNum').textContent = '0';
@@ -2377,6 +2392,8 @@ function initMy() {
     return;
   }
 
+  document.getElementById('guestBanner').style.display = 'none';
+  document.getElementById('profAv').style.fontSize = '';
   document.getElementById('mySettingBtn').style.display = '';
   document.getElementById('logoutBtn').style.display = '';
   document.getElementById('profAv').textContent = cu.username[0].toUpperCase();
