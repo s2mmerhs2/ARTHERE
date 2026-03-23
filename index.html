@@ -259,6 +259,7 @@ body {
 .loc-fab svg { width:16px; height:16px; flex-shrink:0; }
 
 /* ── BOTTOM SHEET ── */
+.loc-fab.hidden { opacity:0; pointer-events:none; }
 .bsht {
   position:absolute; bottom:0; left:0; right:0;
   background:var(--white); border-radius:24px 24px 0 0;
@@ -267,7 +268,10 @@ body {
   transform:translateY(0); transition:transform .3s cubic-bezier(.32,.72,0,1);
 }
 .bsht.hide { transform:translateY(110%); pointer-events:none; }
-.bsh-pip { width:36px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 0; }
+.bsh-pip { width:100%; display:flex; align-items:center; justify-content:center; padding:10px 16px 0; position:relative; }
+.bsh-pip::before { content:''; width:36px; height:4px; background:var(--border); border-radius:2px; }
+.bsh-close-btn { position:absolute; right:14px; top:5px; background:var(--surface); border:none; width:28px; height:28px; border-radius:50%; font-size:12px; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.bsh-close-btn:hover { background:var(--border); color:var(--ink); }
 .bsh-body { padding:14px 16px 32px; }
 
 /* Selected exhibition — HERO CARD (large) */
@@ -318,6 +322,7 @@ body {
 .exc-ph {
   width:52px; height:52px; border-radius:12px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center; font-size:22px;
+  position:relative; overflow:hidden;
 }
 .exc-ph.s { background:linear-gradient(135deg,#e0f2fe,#bae6fd); }
 .exc-ph.c { background:linear-gradient(135deg,#fef9c3,#fde68a); }
@@ -434,16 +439,24 @@ body {
 .disc-hero:hover { transform:translateY(-2px); }
 /* ── 공통 포스터 표시 스타일 ── */
 /* ── 공통 포스터 img 스타일 ── */
+/* ── 포스터 이미지: 흰 테두리/여백이 잘리도록 scale 확대 크롭 ── */
 .poster-img {
   position:absolute; inset:0;
   width:100%; height:100%;
   object-fit:cover; display:block; z-index:0;
+  object-position:center center;
+  transform:scale(1.08);
+  transform-origin:center center;
 }
 
 /* Discover — Hero */
 .disc-hero-img {
   height:240px; position:relative; overflow:hidden; background:#1a1a2e;
   display:flex; align-items:center; justify-content:center; font-size:72px;
+}
+/* 둘러보기 히어로 포스터: 카드와 동일하게 통일 */
+.disc-hero-img .poster-img {
+  transform:scale(1.08);
 }
 .disc-hero-img-ov {
   position:absolute; inset:0; z-index:1;
@@ -659,19 +672,40 @@ body {
    DETAIL PAGE
 ═══════════════════════════════ */
 #pgDet { overflow-y:auto; background:var(--white); }
+
+/* 포스터 영역 — 세로형, 화면 80% 높이 */
 .det-hero {
-  position:relative; width:100%; padding-top:60%; overflow:hidden; flex-shrink:0;
-  background:var(--surface);
+  position:relative; width:100%; height:80vw; max-height:520px;
+  overflow:hidden; flex-shrink:0; background:#fff;
 }
+/* 포스터 이미지 — 상하좌우 균일 여백으로 포스터처럼 표시 */
 .det-hero-ph {
   position:absolute; inset:0; overflow:hidden;
   display:flex; align-items:center; justify-content:center; font-size:72px;
+  background:#fff;
 }
+/* 상세 히어로 포스터: scale 제거하고 패딩 여백으로 포스터 느낌 */
+.det-hero-ph .poster-img {
+  transform:none;
+  object-fit:contain;
+  padding:16px;
+  background:#fff;
+}
+/* 하단 그라디언트: 정보 텍스트가 보이도록 */
 .det-ov {
   position:absolute; inset:0; z-index:1;
-  background:linear-gradient(to bottom, rgba(0,0,0,0) 35%, rgba(0,0,0,.8) 100%);
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,.15) 0%,
+    rgba(0,0,0,0) 30%,
+    rgba(0,0,0,0) 45%,
+    rgba(0,0,0,.75) 80%,
+    rgba(0,0,0,.92) 100%
+  );
 }
-.det-top { position:absolute; top:12px; left:12px; right:12px; display:flex; align-items:center; justify-content:space-between; z-index:2; }
+.det-top {
+  position:absolute; top:12px; left:12px; right:12px;
+  display:flex; align-items:center; justify-content:space-between; z-index:2;
+}
 .det-back {
   width:36px; height:36px; border-radius:50%;
   background:rgba(255,255,255,.9); backdrop-filter:blur(8px);
@@ -687,14 +721,17 @@ body {
 .det-title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px; }
 .det-title { font-family:'Gowun Batang',serif; font-size:24px; font-weight:700; color:#fff; line-height:1.25; text-shadow:0 2px 10px rgba(0,0,0,.4); flex:1; }
 .det-scrap-btn {
-  width:36px; height:36px; border-radius:50%; flex-shrink:0;
-  background:rgba(255,255,255,.2); backdrop-filter:blur(6px);
-  border:1.5px solid rgba(255,255,255,.4);
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  font-size:16px; transition:all .2s;
+  min-width:52px; height:52px; border-radius:14px; flex-shrink:0;
+  background:rgba(255,255,255,.18); backdrop-filter:blur(6px);
+  border:1.5px solid rgba(255,255,255,.35);
+  cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  transition:all .2s; padding:0 10px; font-family:'Noto Sans KR',sans-serif;
 }
-.det-scrap-btn:hover { background:rgba(255,255,255,.35); transform:scale(1.08); }
-.det-scrap-btn.active { background:rgba(190,24,93,.3); border-color:rgba(255,255,255,.6); }
+.det-scrap-btn:hover { background:rgba(255,255,255,.3); transform:scale(1.05); }
+.det-scrap-btn .scrap-icon { font-size:20px; line-height:1; display:block; }
+.det-scrap-btn .scrap-label { font-size:9px; font-weight:700; color:rgba(255,255,255,.8); letter-spacing:.3px; display:block; white-space:nowrap; }
+.det-scrap-btn.scrapped { background:rgba(109,79,194,.55); border-color:rgba(180,140,255,.7); }
+.det-scrap-btn.scrapped .scrap-label { color:#e8d4ff; }
 .det-dates { font-size:11px; color:rgba(255,255,255,.7); display:flex; gap:8px; flex-wrap:wrap; }
 .det-body { padding:18px 16px 48px; background:var(--white); }
 .det-dv {
@@ -735,6 +772,28 @@ body {
 .hts { display:flex; gap:8px; margin-bottom:12px; }
 .ht { font-size:28px; cursor:pointer; opacity:.2; transition:opacity .15s, transform .15s; color:#be185d; line-height:1; user-select:none; }
 .ht:hover, .ht.on { opacity:1; transform:scale(1.15); }
+/* 후기 사진 첨부 영역 */
+.rat-photo-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.rat-photo-add {
+  width:60px; height:60px; border-radius:10px; border:2px dashed var(--border);
+  background:var(--white); display:flex; flex-direction:column; align-items:center;
+  justify-content:center; cursor:pointer; font-size:20px; color:var(--muted);
+  transition:border-color .2s; flex-shrink:0;
+}
+.rat-photo-add:hover { border-color:var(--accent); color:var(--accent); }
+.rat-photo-thumb {
+  width:60px; height:60px; border-radius:10px; object-fit:cover;
+  border:2px solid var(--border); flex-shrink:0; position:relative; display:inline-block;
+}
+.rat-photo-wrap { position:relative; width:60px; height:60px; }
+.rat-photo-del {
+  position:absolute; top:-5px; right:-5px; width:18px; height:18px;
+  background:#dc2626; color:#fff; border:none; border-radius:50%;
+  font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  line-height:1; z-index:2;
+}
+/* 리뷰 사진 표시 */
+.rev-img { width:100%; border-radius:10px; margin-top:8px; object-fit:cover; max-height:200px; }
 .rat-ta {
   width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:12px;
   font-size:13px; color:var(--ink); font-family:'Noto Sans KR',sans-serif;
@@ -829,6 +888,22 @@ body {
 ::-webkit-scrollbar-thumb { background:var(--aurora-2); border-radius:2px; }
 @keyframes slideUp { from { transform:translateY(28px); opacity:0; } to { transform:translateY(0); opacity:1; } }
 .su { animation:slideUp .3s ease forwards; }
+/* 자동완성 드롭다운 */
+.ac-wrap { position:relative; }
+.ac-list {
+  position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:9999;
+  background:#fff; border:1.5px solid var(--accent); border-radius:12px;
+  box-shadow:0 8px 24px rgba(109,79,194,.18); overflow:hidden;
+  max-height:180px; overflow-y:auto;
+}
+.ac-item {
+  padding:10px 14px; font-size:13px; color:var(--ink); cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:background .15s;
+  border-bottom:1px solid var(--border);
+}
+.ac-item:last-child { border-bottom:none; }
+.ac-item:hover, .ac-item.sel { background:var(--accent-light); color:var(--accent); }
+.ac-item b { color:var(--accent); font-weight:700; }
 </style>
 </head>
 <body>
@@ -837,9 +912,16 @@ body {
   <!-- HEADER -->
   <div class="hdr" id="hdr">
     <div class="hlogo">ART<b>HERE</b></div>
-    <div class="hbtns">
+    <!-- 일반 버튼 (지도/캘린더/둘러보기/마이) -->
+    <div class="hbtns" id="hBtnsDefault">
       <button class="hbtn primary" id="hAddBtn">＋ 등록</button>
       <button class="hbtn" id="hMyBtn">내 정보</button>
+    </div>
+    <!-- 상세 페이지 공유 버튼 -->
+    <div class="hbtns" id="hBtnsDetail" style="display:none">
+      <button class="hbtn" id="hShareBtn" onclick="shareExhibition()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:middle;margin-right:4px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>공유
+      </button>
     </div>
   </div>
 
@@ -878,7 +960,9 @@ body {
         내 위치
       </button>
       <div class="bsht hide" id="bsht">
-        <div class="bsh-pip"></div>
+        <div class="bsh-pip">
+          <button class="bsh-close-btn" id="bshtCloseBtn" title="닫기">✕</button>
+        </div>
         <div class="bsh-body" id="bshBody"></div>
       </div>
     </div>
@@ -944,9 +1028,8 @@ body {
           </div>
           <div class="my-name" id="profName">사용자</div>
           <div class="my-email" id="profSchool">학교 · 학과</div>
-          <!-- 1. Edit Profile + 내 정보 설정 나란히 -->
+          <!-- 설정 버튼만 -->
           <div class="my-btn-row">
-            <button class="my-edit-btn" id="myEditBtn">Edit Profile</button>
             <button class="my-setting-btn" id="mySettingBtn">⚙️ 설정</button>
           </div>
         </div>
@@ -1011,7 +1094,7 @@ body {
         <div class="det-btm">
           <div class="det-title-row">
             <div class="det-title" id="detTitle"></div>
-            <button class="det-scrap-btn" id="detScrapBtn" title="스크랩">🔖</button>
+            <button class="det-scrap-btn" id="detScrapBtn" title="스크랩"><span class="scrap-icon">🔖</span><span class="scrap-label">스크랩</span></button>
           </div>
           <div class="det-dates" id="detDates"></div>
         </div>
@@ -1103,8 +1186,18 @@ body {
       <div class="fg"><label>이름</label><input type="text" id="suname" placeholder="이름"></div>
       <div class="fg"><label>이메일</label><input type="email" id="suemail" placeholder="your@email.com"></div>
       <div class="fg"><label>비밀번호</label><input type="password" id="supw" placeholder="••••••••"></div>
-      <div class="fg"><label>학교</label><input type="text" id="suschool" placeholder="예: 국민대학교"></div>
-      <div class="fg"><label>학과</label><input type="text" id="sumajor" placeholder="예: 시각디자인학과"></div>
+      <div class="fg"><label>학교</label>
+        <div class="ac-wrap">
+          <input type="text" id="suschool" placeholder="예: 국민대" autocomplete="off" oninput="acSchool(this.value)" onblur="setTimeout(()=>closeAc('acSchoolList'),180)">
+          <div class="ac-list" id="acSchoolList" style="display:none"></div>
+        </div>
+      </div>
+      <div class="fg"><label>학과</label>
+        <div class="ac-wrap">
+          <input type="text" id="sumajor" placeholder="예: 시각디자인" autocomplete="off" oninput="acMajor(this.value)" onblur="setTimeout(()=>closeAc('acMajorList'),180)">
+          <div class="ac-list" id="acMajorList" style="display:none"></div>
+        </div>
+      </div>
       <button class="btn-auth" id="signupBtn">회원가입</button>
     </div>
   </div>
@@ -1265,6 +1358,176 @@ body {
 
 <!-- Kakao Maps loaded in head -->
 <script>
+// ── 학교별 실제 학과 데이터 (검색 기반 정리) ──
+const SCHOOL_MAJORS = {
+  '홍익대학교': [
+    '시각디자인과','산업디자인학과','금속조형디자인과','도예·유리과',
+    '동양화과','서양화과','조소과','섬유미술패션디자인과',
+    '판화과','목조형가구학과','디자인·예술경영전공','영상·애니메이션학부'
+  ],
+  '국민대학교': [
+    '시각디자인학과','공업디자인학과','금속공예학과','도자공예학과',
+    '의상디자인학과','영상디자인학과','공간디자인학과',
+    '자동차·운송디자인학과','테크노디자인전문대학원'
+  ],
+  '서울대학교': [
+    '디자인과','공예과','동양화과','서양화과','조소과','미술학과'
+  ],
+  '이화여자대학교': [
+    '시각디자인과','산업디자인과','공간디자인과','영상디자인과',
+    '섬유예술과','패션디자인과','동양화과','서양화과','조소과','도예과'
+  ],
+  '중앙대학교': [
+    '서양화과','한국화과','조소과','공예과',
+    '시각디자인전공','영상학부','공연영상창작학부'
+  ],
+  '한양대학교': [
+    '회화과','조소과','미술교육과',
+    '산업디자인학과','커뮤니케이션디자인학과','실내건축디자인학과'
+  ],
+  '성균관대학교': [
+    '미술학과','디자인학과','아트&테크놀로지학과'
+  ],
+  '연세대학교': [
+    '디자인·예술학부','커뮤니케이션대학원','문화예술경영학과'
+  ],
+  '고려대학교': [
+    '디자인조형학부'
+  ],
+  '건국대학교': [
+    '시각디자인과','산업디자인과','의상디자인학과',
+    '커뮤니케이션디자인학과','줄리아드음악대학'
+  ],
+  '경희대학교': [
+    '시각디자인학과','산업디자인학과','환경조경디자인학과',
+    '미술학과','연극·영화학과'
+  ],
+  '단국대학교': [
+    '시각디자인과','공예과','동양화과','서양화과','조소과',
+    '산업디자인학과','패션산업디자인과','인테리어디자인학과'
+  ],
+  '덕성여자대학교': [
+    '시각디자인과','산업디자인과','의상디자인과','도예학과','미술사학과'
+  ],
+  '동국대학교': [
+    '불교미술학과','미디어커뮤니케이션학부','연극학부','영화영상학과'
+  ],
+  '동덕여자대학교': [
+    '시각디자인학과','패션디자인학과','큐레이터학과','예술학과',
+    '회화과','도예학과'
+  ],
+  '명지대학교': [
+    '시각디자인학과','산업디자인학과','인테리어디자인학과',
+    '영상콘텐츠학과','유리세라믹디자인학과'
+  ],
+  '상명대학교': [
+    '디지털인문정보학트랙','디자인학부','사진영상미디어과',
+    '조형예술학부','게임학과'
+  ],
+  '서경대학교': [
+    '시각디자인학과','공간디자인학과','뷰티·예술대학','영화영상학과'
+  ],
+  '서울과학기술대학교': [
+    '조형예술학과','산업디자인학과','금속공예디자인학과',
+    '시각디자인학과','도예학과','IT디자인학부'
+  ],
+  '서울시립대학교': [
+    '산업디자인학과','환경조각학과','도시공학과'
+  ],
+  '서울여자대학교': [
+    '시각디자인학과','산업디자인학과','공예학과',
+    '미디어학부','디지털미디어학과'
+  ],
+  '서울예술대학교': [
+    '시각디자인과','사진과','영상과','광고창작과',
+    '만화애니메이션학과','무대미술과','패션과','공예과'
+  ],
+  '성신여자대학교': [
+    '시각디자인과','산업예술학과','공예과','서양화과','동양화과','조소과'
+  ],
+  '세종대학교': [
+    '패션디자인학과','만화애니메이션텍학과','패션디자인학과',
+    '영화예술학과','공연예술학부'
+  ],
+  '숙명여자대학교': [
+    '시각영상디자인과','산업디자인과','환경디자인과',
+    '의류학과','회화과','조소과'
+  ],
+  '인하대학교': [
+    '조형예술학과','의류디자인학과','스포츠과학과'
+  ],
+  '가천대학교': [
+    '미술·디자인학부','패션디자인학과','미디어커뮤니케이션학과'
+  ],
+  '경기대학교': [
+    '서양화과','미술경영학과','디자인비즈학부'
+  ],
+  '광운대학교': [
+    '정보콘텐츠학부','미디어영상학부'
+  ],
+  '카이스트': [
+    '문화기술대학원','산업디자인학과'
+  ],
+  '포스텍': [
+    '인문사회학부'
+  ],
+  '한국외국어대학교': [
+    '아트&테크놀로지학과'
+  ],
+};
+
+// 학교 목록
+const SCHOOLS = Object.keys(SCHOOL_MAJORS).sort((a,b)=>a.localeCompare(b,'ko'));
+
+// 전체 학과 목록 (중복 제거, 정렬)
+const ALL_MAJORS = [...new Set(Object.values(SCHOOL_MAJORS).flat())].sort((a,b)=>a.localeCompare(b,'ko'));
+
+function highlightMatch(text, query) {
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if(idx < 0) return text;
+  return text.slice(0,idx) + '<b>' + text.slice(idx, idx+query.length) + '</b>' + text.slice(idx+query.length);
+}
+function closeAc(id) {
+  const el = document.getElementById(id);
+  if(el) el.style.display = 'none';
+}
+function acSchool(q) {
+  const list = document.getElementById('acSchoolList');
+  if(!q || q.length < 1) { list.style.display='none'; return; }
+  const matches = SCHOOLS.filter(s => s.includes(q)).slice(0,10);
+  if(!matches.length) { list.style.display='none'; return; }
+  list.innerHTML = matches.map(s =>
+    `<div class="ac-item" onmousedown="pickSchool('${s}')">${highlightMatch(s,q)}</div>`
+  ).join('');
+  list.style.display = 'block';
+}
+function pickSchool(val) {
+  document.getElementById('suschool').value = val;
+  closeAc('acSchoolList');
+  // 학교 선택 후 학과 필드 초기화 및 포커스
+  document.getElementById('sumajor').value = '';
+  document.getElementById('sumajor').focus();
+}
+function acMajor(q) {
+  const list = document.getElementById('acMajorList');
+  if(!q || q.length < 1) { list.style.display='none'; return; }
+  // 선택된 학교가 있으면 해당 학교 학과만, 없으면 전체 학과에서 검색
+  const selectedSchool = document.getElementById('suschool').value;
+  const pool = (selectedSchool && SCHOOL_MAJORS[selectedSchool])
+    ? SCHOOL_MAJORS[selectedSchool]
+    : ALL_MAJORS;
+  const matches = pool.filter(m => m.includes(q)).slice(0,10);
+  if(!matches.length) { list.style.display='none'; return; }
+  list.innerHTML = matches.map(m =>
+    `<div class="ac-item" onmousedown="pickMajor('${m}')">${highlightMatch(m,q)}</div>`
+  ).join('');
+  list.style.display = 'block';
+}
+function pickMajor(val) {
+  document.getElementById('sumajor').value = val;
+  closeAc('acMajorList');
+}
+
 // ── STATE ──
 let cu = JSON.parse(localStorage.getItem('cu'));
 let exs = JSON.parse(localStorage.getItem('exs')) || [];
@@ -1457,6 +1720,10 @@ function showPg(name) {
   const showChrome = name !== 'pgSplash';
   document.getElementById('hdr').classList.toggle('on', showChrome);
   document.getElementById('bnav').classList.toggle('on', showChrome);
+  // 헤더 버튼: 상세 페이지이면 공유 버튼, 나머지는 기본 버튼
+  const isDetail = name === 'pgDet';
+  document.getElementById('hBtnsDefault').style.display = isDetail ? 'none' : 'flex';
+  document.getElementById('hBtnsDetail').style.display = isDetail ? 'flex' : 'none';
   if(name==='pgMap') {
     setTimeout(() => {
       if(!map) initMap();
@@ -1512,9 +1779,34 @@ function initMap(centerLat, centerLng) {
     }
     map.relayout();
 
+    // 줌 레벨별 타이틀 글자 수 계산 함수
+    function getLabelLen() {
+      const lv = map.getLevel();
+      if(lv <= 2) return 30;
+      if(lv <= 3) return 20;
+      if(lv <= 4) return 14;
+      if(lv <= 5) return 10;
+      return 8;
+    }
+    function makeLbl(title) {
+      const n = getLabelLen();
+      return title.length > n ? title.slice(0, n) + '…' : title;
+    }
+    // 줌 변경 시 모든 라벨 업데이트
+    function updateLabels() {
+      markers.forEach(m => {
+        if(!m._exId || !m.getContent) return;
+        const el = m.getContent();
+        if(!el || !el.classList) return;
+        const ex = exs.find(e => e.id === m._exId);
+        if(ex) el.textContent = makeLbl(ex.title);
+      });
+    }
+    kakao.maps.event.addListener(map, 'zoom_changed', updateLabels);
+
     const filtered = curFilter==='all' ? exs : exs.filter(e=>e.type===curFilter);
     filtered.forEach(ex => {
-      const lbl = ex.title.length>10 ? ex.title.slice(0,10)+'…' : ex.title;
+      const lbl = makeLbl(ex.title);
       const cls = ex.type==='graduation' ? 'g' : ex.type==='club' ? 'c' : 's';
 
       // kakao.maps.Marker 기반 — 클릭 이벤트가 가장 안정적
@@ -1644,6 +1936,8 @@ window.selMark = function selMark(id) {
     const lbl = document.createElement('div'); lbl.className = 'bsh-nearby-hdr'; lbl.textContent = '근처 전시'; body.appendChild(lbl);
     nearby.forEach(ex => body.appendChild(makeExCard(ex)));
   }
+  // 1. 내 위치 버튼 숨기기
+  document.getElementById('locFab').classList.add('hidden');
   document.getElementById('bsht').classList.remove('hide');
 }
 
@@ -1714,11 +2008,29 @@ function showDetail(id) {
   // 스크랩 버튼 상태
   const scrapBtn = document.getElementById('detScrapBtn');
   const isScrapped = cu && scraps.some(s => s.userId === cu.id && s.exhibitionId === id);
-  scrapBtn.textContent = isScrapped ? '🔖' : '🔖';
-  scrapBtn.style.color = isScrapped ? '#be185d' : '';
-  scrapBtn.style.background = isScrapped ? 'rgba(190,24,93,.1)' : 'rgba(255,255,255,.9)';
+  scrapBtn.querySelector('.scrap-icon').textContent = isScrapped ? '🔖' : '🔖';
+  scrapBtn.querySelector('.scrap-label').textContent = isScrapped ? '스크랩됨' : '스크랩';
+  scrapBtn.classList.toggle('scrapped', isScrapped);
+  scrapBtn.style.background = '';
+  scrapBtn.style.borderColor = '';
   scrapBtn.onclick = () => toggleScrap(id);
 }
+function shareExhibition() {
+  const ex = exs.find(e => e.id === curExId); if(!ex) return;
+  const text = `${ex.title}\n📍 ${ex.location}\n📅 ${ex.startDate} ~ ${ex.endDate}\n\nARTHERE에서 발견한 전시 🎨`;
+  if(navigator.share) {
+    navigator.share({ title: ex.title, text: text, url: location.href })
+      .catch(() => {});
+  } else {
+    // 클립보드 복사 fallback
+    navigator.clipboard.writeText(text).then(() => {
+      alert('전시 정보가 클립보드에 복사됐어요! 📋');
+    }).catch(() => {
+      alert(text);
+    });
+  }
+}
+
 window.openInsta = function openInsta() {
   const btn = document.getElementById('detInstaBtn');
   const ig = btn && btn.dataset.ig;
@@ -1742,32 +2054,114 @@ function toggleScrap(exId) {
     scraps.push({ userId: cu.id, exhibitionId: exId });
   }
   localStorage.setItem('scraps', JSON.stringify(scraps));
-  // 버튼 UI 업데이트
   const isScrapped = scraps.some(s => s.userId === cu.id && s.exhibitionId === exId);
   const btn = document.getElementById('detScrapBtn');
   if(btn) {
-    btn.style.color = isScrapped ? '#be185d' : '';
-    btn.style.background = isScrapped ? 'rgba(190,24,93,.1)' : 'rgba(255,255,255,.9)';
+    btn.querySelector('.scrap-label').textContent = isScrapped ? '스크랩됨' : '스크랩';
+    btn.classList.toggle('scrapped', isScrapped);
+    btn.style.background = '';
+    btn.style.borderColor = '';
   }
 }
 
+let ratSelStar = 0;
+let ratPhotos = []; // base64 배열
+
 function renderRat() {
-  const box=document.getElementById('ratBox'); box.innerHTML='';
-  if(!cu){
-    box.innerHTML=`<div class="lp"><p>마음을 남기려면 로그인이 필요해요</p><button onclick="openAuth('login')">로그인 / 회원가입</button></div>`;
+  const box = document.getElementById('ratBox'); box.innerHTML = '';
+  if(!cu) {
+    box.innerHTML = `<div class="lp"><p>마음을 남기려면 로그인이 필요해요</p><button onclick="openAuth('login')">로그인 / 회원가입</button></div>`;
     return;
   }
-  const ta=document.createElement('textarea'); ta.className='rat-ta'; ta.id='rCmt'; ta.placeholder='이 전시에서 느낀 점을 자유롭게 남겨주세요 ✨';
-  const btn=document.createElement('button'); btn.className='btn-sub'; btn.textContent='내 마음 남기기'; btn.onclick=subRat;
-  box.appendChild(ta); box.appendChild(btn);
+  ratSelStar = 0; ratPhotos = [];
+
+  // ① ♥ 점수 선택
+  const hts = document.createElement('div'); hts.className = 'hts'; hts.id = 'ratHts';
+  for(let i=1;i<=5;i++){
+    const h = document.createElement('span'); h.className='ht'; h.textContent='♥'; h.dataset.v=i;
+    h.onclick = () => {
+      ratSelStar = parseInt(h.dataset.v);
+      document.querySelectorAll('#ratHts .ht').forEach((el,idx)=>{
+        el.classList.toggle('on', idx < ratSelStar);
+      });
+    };
+    hts.appendChild(h);
+  }
+  const starLabel = document.createElement('div');
+  starLabel.style.cssText = 'font-size:11px;color:var(--muted);margin-bottom:4px;';
+  starLabel.textContent = '♥ 점수 선택 (선택)';
+  box.appendChild(starLabel);
+  box.appendChild(hts);
+
+  // ② 텍스트
+  const ta = document.createElement('textarea'); ta.className='rat-ta'; ta.id='rCmt'; ta.placeholder='이 전시에서 느낀 점을 자유롭게 남겨주세요 ✨';
+  box.appendChild(ta);
+
+  // ③ 사진 첨부
+  const photoLabel = document.createElement('div');
+  photoLabel.style.cssText = 'font-size:11px;color:var(--muted);margin-bottom:6px;';
+  photoLabel.textContent = '📷 사진 첨부 (선택, 최대 3장)';
+  box.appendChild(photoLabel);
+
+  const photoRow = document.createElement('div'); photoRow.className = 'rat-photo-row'; photoRow.id = 'ratPhotoRow';
+
+  const addSlot = document.createElement('div'); addSlot.className = 'rat-photo-add'; addSlot.title = '사진 추가';
+  addSlot.innerHTML = '+<div style="font-size:9px;margin-top:2px">사진</div>';
+  const fileIn = document.createElement('input'); fileIn.type='file'; fileIn.accept='image/*'; fileIn.style.display='none'; fileIn.multiple=true;
+  fileIn.onchange = () => {
+    const files = Array.from(fileIn.files).slice(0, 3 - ratPhotos.length);
+    files.forEach(f => {
+      if(ratPhotos.length >= 3) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        ratPhotos.push(e.target.result);
+        renderPhotoRow();
+      };
+      reader.readAsDataURL(f);
+    });
+    fileIn.value = '';
+  };
+  addSlot.onclick = () => { if(ratPhotos.length < 3) fileIn.click(); };
+  photoRow.appendChild(fileIn);
+  photoRow.appendChild(addSlot);
+  box.appendChild(photoRow);
+
+  function renderPhotoRow() {
+    // addSlot 제외하고 기존 thumb 제거
+    const existing = photoRow.querySelectorAll('.rat-photo-wrap');
+    existing.forEach(el => el.remove());
+    ratPhotos.forEach((src, i) => {
+      const wrap = document.createElement('div'); wrap.className = 'rat-photo-wrap';
+      const img = document.createElement('img'); img.className = 'rat-photo-thumb'; img.src = src;
+      const del = document.createElement('button'); del.className = 'rat-photo-del'; del.textContent = '✕';
+      del.onclick = () => { ratPhotos.splice(i, 1); renderPhotoRow(); };
+      wrap.appendChild(img); wrap.appendChild(del);
+      photoRow.insertBefore(wrap, addSlot);
+    });
+    addSlot.style.display = ratPhotos.length >= 3 ? 'none' : 'flex';
+  }
+
+  // ④ 제출 버튼
+  const btn = document.createElement('button'); btn.className='btn-sub'; btn.style.marginTop='10px'; btn.textContent='내 마음 남기기 ✨'; btn.onclick=subRat;
+  box.appendChild(btn);
 }
+
 function subRat() {
-  const c=document.getElementById('rCmt').value.trim();
-  if(!c){alert('한 줄이라도 남겨주세요 :)');return;}
-  rats.push({id:Date.now(),exhibitionId:curExId,userId:cu.id,rating:0,comment:c});
-  localStorage.setItem('rats',JSON.stringify(rats));
-  document.getElementById('rCmt').value='';
+  const c = document.getElementById('rCmt').value.trim();
+  if(!c) { alert('한 줄이라도 남겨주세요 :)'); return; }
+  rats.push({
+    id: Date.now(),
+    exhibitionId: curExId,
+    userId: cu.id,
+    rating: ratSelStar,
+    comment: c,
+    photos: ratPhotos.length ? [...ratPhotos] : undefined
+  });
+  localStorage.setItem('rats', JSON.stringify(rats));
+  document.getElementById('rCmt').value = '';
+  ratSelStar = 0; ratPhotos = [];
   loadRevs(curExId);
+  renderRat();
 }
 function loadRevs(id) {
   const r = rats.filter(x => x.exhibitionId === id);
@@ -1778,15 +2172,19 @@ function loadRevs(id) {
     const u = users.find(u => u.id === x.userId);
     const who = u ? `${u.school} ${u.major}` : '방문자';
     const hearts = x.rating > 0
-      ? `${'♥'.repeat(x.rating)}${'♡'.repeat(5 - x.rating)}`
-      : '♥';
+      ? `${'♥'.repeat(x.rating)}${'♡'.repeat(5 - x.rating)} <span style="font-size:10px;opacity:.7">${x.rating}점</span>`
+      : '';
+    const photosHtml = (x.photos && x.photos.length)
+      ? x.photos.map(src => `<img class="rev-img" src="${src}" alt="후기 사진">`).join('')
+      : '';
     const el = document.createElement('div'); el.className = 'rev-item';
     el.innerHTML = `
       <div class="rev-who-row">
         <span class="rev-who">🎓 ${who}</span>
-        <span class="rev-hearts">${hearts}</span>
+        ${hearts ? `<span class="rev-hearts">${hearts}</span>` : ''}
       </div>
-      <div class="rev-t">${x.comment}</div>`;
+      <div class="rev-t">${x.comment}</div>
+      ${photosHtml}`;
     list.appendChild(el);
   });
 }
@@ -1802,10 +2200,13 @@ function makeExCard(ex) {
   const badgeCls = isG ? 'g' : isC ? 'c' : 's';
   const badgeTxt = isG ? '졸업전시' : isC ? '소모임' : '대학생 기획';
   const icon = isG ? '🎓' : isC ? '🏫' : '🎨';
+  const thumbInner = ex.poster
+    ? `<img class="poster-img" src="${ex.poster}" alt="${ex.title}">`
+    : icon;
   const card = document.createElement('div');
   card.className = 'exc su';
   card.innerHTML = `
-    <div class="exc-ph ${badgeCls}" style="background:${cvr(ex.id)}">${icon}</div>
+    <div class="exc-ph ${badgeCls}" style="background:${cvr(ex.id)}">${thumbInner}</div>
     <div class="exc-bd">
       <span class="exc-badge ${badgeCls}">${badgeTxt}</span>
       <div class="exc-title">${ex.title}</div>
@@ -1957,8 +2358,6 @@ function initMy() {
     document.getElementById('profAv').textContent = '?';
     document.getElementById('profName').textContent = '게스트';
     document.getElementById('profSchool').textContent = '로그인하고 더 많은 기능을 사용해보세요';
-    document.getElementById('myEditBtn').textContent = '로그인 / 회원가입';
-    document.getElementById('myEditBtn').onclick = () => openAuth('login');
     document.getElementById('mySettingBtn').style.display = 'none';
     document.getElementById('myReviewNum').textContent = '0';
     document.getElementById('myReviewCount').textContent = '0개의 소중한 기록';
@@ -1983,8 +2382,6 @@ function initMy() {
   document.getElementById('profAv').textContent = cu.username[0].toUpperCase();
   document.getElementById('profName').textContent = cu.username;
   document.getElementById('profSchool').textContent = `${cu.school} · ${cu.major}`;
-  document.getElementById('myEditBtn').textContent = 'Edit Profile';
-  document.getElementById('myEditBtn').onclick = null;
 
   // 후기
   const myR = rats.filter(r => r.userId === cu.id);
@@ -2065,6 +2462,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addModal').onclick = e => { if(e.target.id==='addModal') e.target.classList.remove('on'); };
   document.getElementById('authOv').onclick = e => { if(e.target.id==='authOv') closeAuth(); };
   document.getElementById('locFab').onclick = goToMyLoc;
+  document.getElementById('bshtCloseBtn').onclick = () => {
+    document.getElementById('bsht').classList.add('hide');
+    document.getElementById('locFab').classList.remove('hidden');
+  };
   document.getElementById('prevM').onclick = () => { calM--; if(calM<0){calM=11;calY--;} selCal=null; initCal(); };
   document.getElementById('nextM').onclick = () => { calM++; if(calM>11){calM=0;calY++;} selCal=null; initCal(); };
 
@@ -2113,7 +2514,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let ty=0; const bs=document.getElementById('bsht');
   bs.ontouchstart = e => ty=e.touches[0].clientY;
-  bs.ontouchend = e => { if(e.changedTouches[0].clientY-ty>60) bs.classList.add('hide'); };
+  bs.ontouchend = e => { if(e.changedTouches[0].clientY-ty>60) { bs.classList.add('hide'); document.getElementById('locFab').classList.remove('hidden'); } };
 });
 </script>
 </body>
